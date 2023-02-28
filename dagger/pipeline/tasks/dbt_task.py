@@ -37,6 +37,12 @@ class DbtTask(BatchTask):
                     parent_fields=["task_parameters"],
                     comment="Specify the name of the DBT command to run",
                 ),
+                Attribute(
+                    attribute_name="full_refresh",
+                    required=False,
+                    parent_fields=["task_parameters"],
+                    comment="Boolean to specify if the model run should be a full refresh",
+                ),
             ]
         )
 
@@ -48,6 +54,7 @@ class DbtTask(BatchTask):
         self._profile_name = self.parse_attribute("profile_name") or "default"
         self._select = self.parse_attribute("select")
         self._dbt_command = self.parse_attribute("dbt_command")
+        self._full_refresh = self.parse_attribute("full_refresh")
 
     @property
     def project_dir(self):
@@ -68,3 +75,7 @@ class DbtTask(BatchTask):
     @property
     def dbt_command(self):
         return self._dbt_command
+
+    @property
+    def full_refresh(self):
+        return self._full_refresh

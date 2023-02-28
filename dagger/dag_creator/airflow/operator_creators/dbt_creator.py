@@ -15,6 +15,7 @@ class DbtCreator(BatchCreator):
         self._profile_name = task.profile_name
         self._select = task.select
         self._dbt_command = task.dbt_command
+        self._full_refresh = task.full_refresh
 
     def _generate_command(self):
         command = [self._task.executable_prefix, self._task.executable]
@@ -28,6 +29,9 @@ class DbtCreator(BatchCreator):
         if len(self._template_parameters) > 0:
             dbt_vars = json.dumps(self._template_parameters)
             command.append(f"--vars='{dbt_vars}'")
+
+        if self._full_refresh:
+            command.append(f"--full-refresh")
 
         return command
 
