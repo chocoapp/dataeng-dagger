@@ -30,14 +30,14 @@ class PostgresOperator(DaggerBaseOperator):
 
     @apply_defaults
     def __init__(
-        self,
-        sql: str,
-        postgres_conn_id: str = "postgres_default",
-        autocommit: bool = False,
-        parameters: Optional[Union[Mapping, Iterable]] = None,
-        database: Optional[str] = None,
-        *args,
-        **kwargs,
+            self,
+            sql: str,
+            postgres_conn_id: str = "postgres_default",
+            autocommit: bool = False,
+            parameters: Optional[Union[Mapping, Iterable]] = None,
+            database: Optional[str] = None,
+            *args,
+            **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.sql = sql
@@ -46,18 +46,16 @@ class PostgresOperator(DaggerBaseOperator):
         self.parameters = parameters
         self.database = database
 
-        self._unpack_columns()
-
     def _unpack_columns(self):
         """
         Unpacks columns from parameters dict into a string
         """
         # if parameters exists and is dict and has columns
         if (
-            self.parameters
-            and isinstance(self.parameters, dict)
-            and "columns" in self.parameters):
-                self.parameters["columns"] = ", ".join([f'"{column}"' for column in self.parameters["columns"]])
+                self.parameters
+                and isinstance(self.parameters, dict)
+                and isinstance(self.parameters.get("columns"), list)):
+            self.parameters["columns"] = ", ".join([f'"{column}"' for column in self.parameters["columns"]])
 
     def execute(self, context):
         self.log.info("Executing: %s", self.sql)
