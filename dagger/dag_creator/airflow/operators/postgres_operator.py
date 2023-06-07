@@ -46,6 +46,8 @@ class PostgresOperator(DaggerBaseOperator):
         self.parameters = parameters
         self.database = database
 
+        self._unpack_columns()
+
     def _unpack_columns(self):
         """
         Unpacks columns from parameters dict into a string
