@@ -57,7 +57,7 @@ class PostgresOperator(DaggerBaseOperator):
             self.parameters
             and isinstance(self.parameters, dict)
             and "columns" in self.parameters):
-                self.parameters["columns"] = ", ".join(self.parameters["columns"])
+                self.parameters["columns"] = ", ".join([f'"{column}"' for column in self.parameters["columns"]])
 
     def execute(self, context):
         self.log.info("Executing: %s", self.sql)
