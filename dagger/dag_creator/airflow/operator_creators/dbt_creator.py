@@ -15,6 +15,7 @@ class DbtCreator(BatchCreator):
         self._profile_name = task.profile_name
         self._select = task.select
         self._dbt_command = task.dbt_command
+        self._run_on_databricks = task.run_on_databricks
 
     def _generate_command(self):
         command = [self._task.executable_prefix, self._task.executable]
