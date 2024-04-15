@@ -22,6 +22,7 @@ class DbtCreator(BatchCreator):
         command.append(f"--profiles_dir={self._profile_dir}")
         command.append(f"--profile_name={self._profile_name}")
         command.append(f"--dbt_command={self._dbt_command}")
+        command.append(f"--run_on_databricks={self._run_on_databricks}")
         if self._select:
             command.append(f"--select={self._select}")
 

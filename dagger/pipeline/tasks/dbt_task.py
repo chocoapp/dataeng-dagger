@@ -37,6 +37,11 @@ class DbtTask(BatchTask):
                     parent_fields=["task_parameters"],
                     comment="Specify the name of the DBT command to run",
                 ),
+                Attribute(
+                    attribute_name="run_on_databricks",
+                    parent_fields=["task_parameters"],
+                    comment="Whether to run dbt command on databricks cluster",
+                ),
             ]
         )
 
@@ -48,6 +53,7 @@ class DbtTask(BatchTask):
         self._profile_name = self.parse_attribute("profile_name") or "default"
         self._select = self.parse_attribute("select")
         self._dbt_command = self.parse_attribute("dbt_command")
+        self._dbt_command = self.parse_attribute("run_on_databricks")
 
     @property
     def project_dir(self):
@@ -68,3 +74,7 @@ class DbtTask(BatchTask):
     @property
     def dbt_command(self):
         return self._dbt_command
+
+    @property
+    def run_on_databricks(self):
+        return self._run_on_databricks
