@@ -39,6 +39,7 @@ class DbtTask(BatchTask):
                 ),
                 Attribute(
                     attribute_name="run_on_databricks",
+                    required=False,
                     parent_fields=["task_parameters"],
                     comment="Whether to run dbt command on databricks cluster",
                 ),
