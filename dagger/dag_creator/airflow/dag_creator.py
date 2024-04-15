@@ -72,12 +72,7 @@ class DagCreator(GraphTraverserBase):
 
         to_pipe_id = self._task_graph.get_node(to_task_id).obj.pipeline.name
 
-
-        extra_args = {
-            'mode': conf.EXTERNAL_SENSOR_MODE,
-            'poke_interval': conf.EXTERNAL_SENSOR_POKE_INTERVAL,
-            'timeout': conf.EXTERNAL_SENSOR_TIMEOUT,
-        }
+        extra_args = conf.EXTERNAL_SENSOR_DEFAULT_ARGS.copy()
         extra_args.update(follow_external_dependency)
 
         return ExternalTaskSensor(
@@ -141,6 +136,7 @@ class DagCreator(GraphTraverserBase):
             to_task_ids: The IDs of the tasks to which the edge connects.
             node: The current node in a task graph.
         """
+
         from_pipe = (
             self._task_graph.get_node(from_task_id).obj.pipeline_name if from_task_id else None
         )

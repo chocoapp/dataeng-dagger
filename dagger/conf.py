@@ -21,9 +21,7 @@ ENV_SUFFIX = "dev" if ENV == "local" else ""
 # Airflow parameters
 airflow_config = config.get('airflow', None) or {}
 WITH_DATA_NODES = airflow_config.get('with_data_nodes', False)
-EXTERNAL_SENSOR_POKE_INTERVAL = airflow_config.get('external_sensor_poke_interval', 600)
-EXTERNAL_SENSOR_TIMEOUT = airflow_config.get('external_sensor_timeout', 28800)
-EXTERNAL_SENSOR_MODE = airflow_config.get('external_sensor_mode', 'reschedule')
+EXTERNAL_SENSOR_DEFAULT_ARGS = airflow_config.get('external_sensor_default_args', {})
 IS_DUMMY_OPERATOR_SHORT_CIRCUIT = airflow_config.get('is_dummy_operator_short_circuit', False)
 
 # Neo4j parameters

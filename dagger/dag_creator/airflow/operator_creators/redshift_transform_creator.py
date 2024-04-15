@@ -1,7 +1,7 @@
 from os.path import join
 
 from dagger.dag_creator.airflow.operator_creator import OperatorCreator
-from dagger.dag_creator.airflow.operators.postgres_operator import PostgresOperator
+from dagger.dag_creator.airflow.operators.redshift_sql_operator import RedshiftSQLOperator
 
 
 class RedshiftTransformCreator(OperatorCreator):
@@ -22,11 +22,11 @@ class RedshiftTransformCreator(OperatorCreator):
     def _create_operator(self, **kwargs):
         sql_string = self._read_sql(self._task.pipeline.directory, self._task.sql_file)
 
-        redshift_op = PostgresOperator(
+        redshift_op = RedshiftSQLOperator(
             dag=self._dag,
             task_id=self._task.name,
             sql=sql_string,
-            postgres_conn_id=self._task.postgres_conn_id,
+            redshift_conn_id=self._task.postgres_conn_id,
             params=self._template_parameters,
             **kwargs,
         )

@@ -96,15 +96,15 @@ install: clean ## install the package to the active Python's site-packages
 
 
 install-dev: clean ## install the package to the active Python's site-packages
-	virtualenv -p python3 venv; \
+	virtualenv -p python3.9 venv; \
 	source venv/bin/activate; \
 	python -m pip install --upgrade pip; \
 	python setup.py install; \
 	pip install -e . ; \
-	pip install -r reqs/dev.txt -r reqs/test.txt
+	SYSTEM_VERSION_COMPAT=0 CFLAGS='-std=c++20' pip install -r reqs/dev.txt -r reqs/test.txt
 
 install-test: clean ## install the package to the active Python's site-packages
-	virtualenv -p python3 venv; \
+	virtualenv -p python3.9 venv; \
 	source venv/bin/activate; \
 	python -m pip install --upgrade pip; \
 	pip install -r reqs/test.txt -r reqs/base.txt

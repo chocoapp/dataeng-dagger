@@ -1,6 +1,6 @@
 from typing import Iterable, Mapping, Optional, Union
 
-from airflow.hooks.postgres_hook import PostgresHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.decorators import apply_defaults
 from dagger.dag_creator.airflow.operators.dagger_base_operator import DaggerBaseOperator
 
