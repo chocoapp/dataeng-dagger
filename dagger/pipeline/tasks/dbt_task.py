@@ -54,7 +54,7 @@ class DbtTask(BatchTask):
         self._profile_name = self.parse_attribute("profile_name") or "default"
         self._select = self.parse_attribute("select")
         self._dbt_command = self.parse_attribute("dbt_command")
-        self._dbt_command = self.parse_attribute("run_on_databricks")
+        self._run_on_databricks = self.parse_attribute("run_on_databricks")
 
     @property
     def project_dir(self):
