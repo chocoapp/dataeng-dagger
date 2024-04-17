@@ -20,7 +20,7 @@ class DbtTask(BatchTask):
                     comment="Which directory to look in for the profiles.yml file",
                 ),
                 Attribute(
-                    attribute_name="profile_name",
+                    attribute_name="target_name",
                     required=False,
                     parent_fields=["task_parameters"],
                     comment="Which target to load for the given profile "
@@ -45,7 +45,7 @@ class DbtTask(BatchTask):
 
         self._project_dir = self.parse_attribute("project_dir")
         self._profile_dir = self.parse_attribute("profile_dir")
-        self._profile_name = self.parse_attribute("profile_name") or "default"
+        self._target_name = self.parse_attribute("target_name") or "default"
         self._select = self.parse_attribute("select")
         self._dbt_command = self.parse_attribute("dbt_command")
 
@@ -58,8 +58,8 @@ class DbtTask(BatchTask):
         return self._profile_dir
 
     @property
-    def profile_name(self):
-        return self._profile_name
+    def target_name(self):
+        return self._target_name
 
     @property
     def select(self):
