@@ -113,7 +113,7 @@ class SparkCreator(OperatorCreator):
                 job_name=job_name,
                 region_name=self._task.region_name,
                 job_queue=self._task.job_queue,
-                overrides=overrides,
+                container_overrides=overrides,
                 **kwargs,
             )
         elif self._task.spark_engine == "glue":
