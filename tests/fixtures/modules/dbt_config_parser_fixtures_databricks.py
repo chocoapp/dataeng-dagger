@@ -1,12 +1,29 @@
-DBT_MANIFEST_FILE_FIXTURE = {
+DATABRICKS_DBT_PROFILE_FIXTURE = {
+    "databricks": {
+        "outputs": {
+            "data": {
+                "type": "databricks",
+                "catalog": "hive_metastore",
+                "schema": "analytics_engineering",
+                "host": "xxx.databricks.com",
+                "http_path": "/sql/1.0/warehouses/xxx",
+                "token": "{{ env_var('SECRETDATABRICKS') }}"
+            },
+        }
+
+    }
+}
+
+DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
     "nodes": {
         "model.main.model1": {
-            "database": "awsdatacatalog",
+            "database": "marts",
             "schema": "analytics_engineering",
-            "unique_id": "model.main.model1",
             "name": "model1",
+            "unique_id": "model.main.model1",
+            "resource_type": "model",
             "config": {
-                "external_location": "s3://bucket1-data-lake/path1/model1",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
                 "materialized": "incremental",
                 "incremental_strategy": "insert_overwrite",
             },
@@ -14,7 +31,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
             "tags": ["daily"],
             "unrendered_config": {
                 "materialized": "incremental",
-                "external_location": "s3://bucket1-data-lake/path1/model1",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
                 "incremental_strategy": "insert_overwrite",
                 "partitioned_by": ["year", "month", "day", "dt"],
                 "tags": ["daily"],
@@ -34,10 +51,13 @@ DBT_MANIFEST_FILE_FIXTURE = {
             },
         },
         "model.main.stg_core_schema1__table1": {
-            "schema": "analytics_engineering",
-            "unique_id": "model.main.stg_core_schema1__table1",
+            "database": "hive_metastore",
+            "schema": "data_preparation",
             "name": "stg_core_schema1__table1",
+            "unique_id": "model.main.stg_core_schema1__table1",
+            "resource_type": "model",
             "config": {
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/preparation",
                 "materialized": "view",
             },
             "depends_on": {
@@ -46,10 +66,13 @@ DBT_MANIFEST_FILE_FIXTURE = {
             },
         },
         "model.main.stg_core_schema2__table2": {
-            "schema": "analytics_engineering",
+            "database": "hive_metastore",
+            "schema": "data_preparation",
             "name": "stg_core_schema2__table2",
             "unique_id": "model.main.stg_core_schema2__table2",
+            "resource_type": "model",
             "config": {
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/preparation",
                 "materialized": "view",
             },
             "depends_on": {
@@ -62,11 +85,13 @@ DBT_MANIFEST_FILE_FIXTURE = {
             },
         },
         "model.main.model2": {
-            "name": "model2",
+            "database": "marts",
             "schema": "analytics_engineering",
+            "name": "model2",
             "unique_id": "model.main.model2",
+            "resource_type": "model",
             "config": {
-                "external_location": "s3://bucket1-data-lake/path2/model2",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
                 "materialized": "table",
             },
             "depends_on": {"macros": [], "nodes": []},
@@ -74,9 +99,12 @@ DBT_MANIFEST_FILE_FIXTURE = {
         "model.main.int_model3": {
             "name": "int_model3",
             "unique_id": "model.main.int_model3",
+            "database": "intermediate",
             "schema": "analytics_engineering",
+            "resource_type": "model",
             "config": {
                 "materialized": "ephemeral",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate",
             },
             "depends_on": {
                 "macros": [],
@@ -84,10 +112,10 @@ DBT_MANIFEST_FILE_FIXTURE = {
             },
         },
         "seed.main.seed_buyer_country_overwrite": {
-            "database": "awsdatacatalog",
-            "schema": "analytics_engineering",
-            "unique_id": "seed.main.seed_buyer_country_overwrite",
+            "database": "hive_metastore",
+            "schema": "datastg_preparation",
             "name": "seed_buyer_country_overwrite",
+            "unique_id": "seed.main.seed_buyer_country_overwrite",
             "resource_type": "seed",
             "alias": "seed_buyer_country_overwrite",
             "tags": ["analytics"],
@@ -97,10 +125,11 @@ DBT_MANIFEST_FILE_FIXTURE = {
         },
         "model.main.model3": {
             "name": "model3",
+            "database": "marts",
             "schema": "analytics_engineering",
             "unique_id": "model.main.model3",
             "config": {
-                "external_location": "s3://bucket1-data-lake/path2/model3",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
             },
             "depends_on": {
                 "macros": [],
@@ -115,9 +144,11 @@ DBT_MANIFEST_FILE_FIXTURE = {
         "model.main.int_model2": {
             "name": "int_model2",
             "unique_id": "model.main.int_model2",
+            "database": "intermediate",
             "schema": "analytics_engineering",
             "config": {
                 "materialized": "ephemeral",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate",
             },
             "depends_on": {
                 "macros": [],
@@ -131,7 +162,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
     "sources": {
         "source.main.core_schema1.table1": {
             "source_name": "table1",
-            "database": "awsdatacatalog",
+            "database": "hive_metastore",
             "schema": "core_schema1",
             "resource_type": "source",
             "unique_id": "source.main.core_schema1.table1",
@@ -141,7 +172,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
         },
         "source.main.core_schema2.table2": {
             "source_name": "table2",
-            "database": "awsdatacatalog",
+            "database": "hive_metastore",
             "schema": "core_schema2",
             "resource_type": "source",
             "unique_id": "source.main.core_schema2.table2",
@@ -151,7 +182,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
         },
         "source.main.core_schema2.table3": {
             "source_name": "table3",
-            "database": "awsdatacatalog",
+            "database": "hive_metastore",
             "schema": "core_schema2",
             "resource_type": "source",
             "unique_id": "source.main.core_schema2.table3",
@@ -162,27 +193,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
     },
 }
 
-DBT_PROFILE_FIXTURE = {
-    "main": {
-        "outputs": {
-            "data": {
-                "aws_profile_name": "data",
-                "database": "awsdatacatalog",
-                "num_retries": 10,
-                "region_name": "eu-west-1",
-                "s3_data_dir": "s3://bucket1-data-lake/path1/tmp",
-                "s3_data_naming": "schema_table",
-                "s3_staging_dir": "s3://bucket1-data-lake/path1/",
-                "schema": "analytics_engineering",
-                "threads": 4,
-                "type": "athena",
-                "work_group": "primary",
-            },
-        }
-    }
-}
-
-EXPECTED_STAGING_NODE = [
+DATABRICKS_EXPECTED_STAGING_NODE = [
     {
         "name": "stg_core_schema1__table1",
         "type": "dummy",
@@ -190,14 +201,14 @@ EXPECTED_STAGING_NODE = [
     },
 ]
 
-EXPECTED_SEED_NODE = [
+DATABRICKS_EXPECTED_SEED_NODE = [
     {
         "type": "dummy",
         "name": "seed_buyer_country_overwrite",
     }
 ]
 
-EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
+DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     {
         "type": "dummy",
         "name": "int_model3",
@@ -218,16 +229,17 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
         "follow_external_dependency": True,
     },
     {
-        "type": "athena",
-        "name": "analytics_engineering__model2_athena",
+        "type": "databricks",
+        "name": "marts__analytics_engineering__model2_databricks",
+        "catalog": "marts",
         "schema": "analytics_engineering",
         "table": "model2",
         "follow_external_dependency": True,
     },
     {
-        "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
-        "path": "path2/model2",
+        "bucket": "chodata-data-lake",
+        "name": "marts__analytics_engineering__model2_s3",
+        "path": "analytics_warehouse/data/marts/analytics_engineering/model2",
         "type": "s3",
     },
     {
@@ -237,7 +249,7 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     },
 ]
 
-EXPECTED_EPHEMERAL_NODE = [
+DATABRICKS_EXPECTED_EPHEMERAL_NODE = [
     {
         "type": "dummy",
         "name": "int_model3",
@@ -259,39 +271,41 @@ EXPECTED_EPHEMERAL_NODE = [
     }
 ]
 
-EXPECTED_MODEL_NODE = [
+DATABRICKS_EXPECTED_MODEL_NODE = [
     {
-        "type": "athena",
-        "name": "analytics_engineering__model1_athena",
+        "type": "databricks",
+        "name": "marts__analytics_engineering__model1_databricks",
+        "catalog": "marts",
         "schema": "analytics_engineering",
         "table": "model1",
         "follow_external_dependency": True,
     },
     {
-        "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
-        "path": "path1/model1",
+        "bucket": "chodata-data-lake",
+        "name": "marts__analytics_engineering__model1_s3",
+        "path": "analytics_warehouse/data/marts/analytics_engineering/model1",
         "type": "s3",
     },
 ]
 
-EXPECTED_DAGGER_INPUTS = [
+DATABRICKS_EXPECTED_DAGGER_INPUTS = [
     {
         "name": "stg_core_schema2__table2",
         "type": "dummy",
         "follow_external_dependency": True,
     },
     {
-        "name": "analytics_engineering__model2_athena",
+        "name": "marts__analytics_engineering__model2_databricks",
+        "catalog": "marts",
         "schema": "analytics_engineering",
         "table": "model2",
-        "type": "athena",
+        "type": "databricks",
         "follow_external_dependency": True,
     },
     {
-        "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
-        "path": "path2/model2",
+        "bucket": "chodata-data-lake",
+        "name": "marts__analytics_engineering__model2_s3",
+        "path": "analytics_warehouse/data/marts/analytics_engineering/model2",
         "type": "s3",
     },
     {
@@ -312,7 +326,7 @@ EXPECTED_DAGGER_INPUTS = [
     },
 ]
 
-EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
+DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
     {
         "follow_external_dependency": True,
         "name": "core_schema2__table2_athena",
@@ -330,29 +344,7 @@ EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
     {"name": "seed_buyer_country_overwrite", "type": "dummy"},
 ]
 
-EXPECTED_DAGGER_OUTPUTS = [
-    {
-        "name": "analytics_engineering__model1_athena",
-        "schema": "analytics_engineering",
-        "table": "model1",
-        "type": "athena",
-    },
-    {
-        "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
-        "path": "path1/model1",
-        "type": "s3",
-    },
-]
-
-EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
-    {
-        "type": "dummy",
-        "name": "stg_core_schema2__table2",
-    },
-]
-
-EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
+DATABRICKS_EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
     {"name": "seed_buyer_country_overwrite", "type": "dummy"},
     {
         "name": "stg_core_schema1__table1",
@@ -360,3 +352,34 @@ EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
         "follow_external_dependency": True,
     },
 ]
+
+DATABRICKS_EXPECTED_DAGGER_OUTPUTS = [
+    {
+        "name": "marts__analytics_engineering__model1_databricks",
+        "catalog": "marts",
+        "schema": "analytics_engineering",
+        "table": "model1",
+        "type": "databricks",
+    },
+    {
+        "bucket": "chodata-data-lake",
+        "name": "marts__analytics_engineering__model1_s3",
+        "path": "analytics_warehouse/data/marts/analytics_engineering/model1",
+        "type": "s3",
+    },
+    {
+        "name": "analytics_engineering__model1_athena",
+        "schema": "analytics_engineering",
+        "table": "model1",
+        "type": "athena",
+    }
+]
+
+DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
+    {
+        "type": "dummy",
+        "name": "stg_core_schema2__table2",
+    },
+]
+
+
