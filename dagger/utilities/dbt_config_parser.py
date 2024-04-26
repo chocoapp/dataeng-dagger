@@ -59,12 +59,19 @@ class DBTConfigParser(ABC):
             _logger.error(f"File not found: {file_path}")
             exit(1)
 
-    @abstractmethod
     def _get_athena_table_task(
         self, node: dict, follow_external_dependency: bool = False
     ) -> dict:
-        """Generate an athena table task for a DBT node. Must be implemented by subclasses. This function should be deprecated after the source connects with databricks directly"""
-        pass
+        """Generate an athena table task for a DBT node."""
+        task = ATHENA_TASK_BASE.copy()
+        if follow_external_dependency:
+            task["follow_external_dependency"] = True
+
+        task["schema"] = node.get("schema", self._default_schema)
+        task["table"] = node.get("name", "")
+        task["name"] = f"{task['schema']}__{task['table']}_athena"
+
+        return task
 
     @abstractmethod
     def _get_table_task(
@@ -173,7 +180,6 @@ class DBTConfigParser(ABC):
         inputs_list = []
         model_node = self._nodes_in_manifest[f"model.main.{model_name}"]
         parent_node_names = model_node.get("depends_on", {}).get("nodes", [])
-        print(f"parent node name: {parent_node_names}")
 
         for parent_node_name in parent_node_names:
             dagger_input = self._generate_dagger_tasks(parent_node_name)
@@ -186,8 +192,6 @@ class DBTConfigParser(ABC):
                 (frozenset(item.items()), item) for item in inputs_list
             ).values()
         )
-
-        print(unique_inputs)
 
         return unique_inputs, output_list
 
@@ -209,20 +213,7 @@ class AthenaDBTConfigParser(DBTConfigParser):
         """
         Generates the dagger athena task for the DBT model node
         """
-        task = ATHENA_TASK_BASE.copy()
-        if follow_external_dependency:
-            task["follow_external_dependency"] = True
-
-        task["schema"] = node.get("schema", self._default_schema)
-        task["table"] = node.get("name", "")
-        task["name"] = f"{task['schema']}__{task['table']}_athena"
-
-        return task
-
-    def _get_athena_table_task(
-        self, node: dict, follow_external_dependency: bool = False
-    ) -> dict:
-        return self._get_table_task(node, follow_external_dependency)
+        return self._get_athena_table_task(node, follow_external_dependency)
 
     def _get_model_data_location(
         self, node: dict, schema: str, model_name: str
@@ -286,7 +277,6 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         super().__init__(default_config_parameters)
         self._profile_name = "databricks"
         self._default_catalog = self._target_config.get("catalog")
-        self._athena_dbt_parser = AthenaDBTConfigParser(default_config_parameters)
         self._create_external_athena_table = default_config_parameters.get(
             "create_external_athena_table", False
         )
@@ -309,11 +299,6 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         ] = f"{task['catalog']}__{task['schema']}__{task['table']}_databricks"
 
         return task
-
-    def _get_athena_table_task(
-        self, node: dict, follow_external_dependency: bool = False
-    ) -> dict:
-        return self._athena_dbt_parser._get_table_task(node, follow_external_dependency)
 
     def _get_model_data_location(
         self, node: dict, schema: str, model_name: str
