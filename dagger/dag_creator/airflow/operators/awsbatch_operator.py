@@ -8,7 +8,7 @@ from airflow.providers.amazon.aws.links.batch import (
 from airflow.providers.amazon.aws.links.logs import CloudWatchEventsLink
 
 
-class AWSBatchOperator(AWSBatchOperator):
+class AWSBatchOperator(BatchOperator):
     @staticmethod
     def _format_cloudwatch_link(awslogs_region: str, awslogs_group: str, awslogs_stream_name: str):
         return f"https://{awslogs_region}.console.aws.amazon.com/cloudwatch/home?region={awslogs_region}#logEventViewer:group={awslogs_group};stream={awslogs_stream_name}"
