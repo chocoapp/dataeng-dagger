@@ -17,7 +17,7 @@ class DbtCreator(BatchCreator):
         self._select = task.select
         self._dbt_command = task.dbt_command
         self._vars = task.vars
-        # self._create_external_athena_table = task.create_external_athena_table
+        self._create_external_athena_table = task.create_external_athena_table
 
     def _generate_command(self):
         command = [self._task.executable_prefix, self._task.executable]
@@ -31,7 +31,7 @@ class DbtCreator(BatchCreator):
         if self._vars:
             dbt_vars = json.dumps(self._vars)
             command.append(f"--vars='{dbt_vars}'")
-        # if self._create_external_athena_table:
-        #     command.append(f"--create_external_athena_table={self._create_external_athena_table}")
+        if self._create_external_athena_table:
+            command.append(f"--create_external_athena_table={self._create_external_athena_table}")
 
         return command
