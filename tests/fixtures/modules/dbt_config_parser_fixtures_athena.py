@@ -226,7 +226,7 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "path2/model2",
         "type": "s3",
     },
@@ -269,7 +269,7 @@ EXPECTED_MODEL_NODE = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
+        "name": "s3_model1",
         "path": "path1/model1",
         "type": "s3",
     },
@@ -290,7 +290,7 @@ EXPECTED_DAGGER_INPUTS = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "path2/model2",
         "type": "s3",
     },
@@ -339,7 +339,7 @@ EXPECTED_DAGGER_OUTPUTS = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
+        "name": "output_s3_path",
         "path": "path1/model1",
         "type": "s3",
     },

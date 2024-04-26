@@ -87,10 +87,20 @@ class DBTConfigParser(ABC):
         """Get the S3 path of the DBT model relative to the data bucket. Must be implemented by subclasses."""
         pass
 
-    @abstractmethod
-    def _get_s3_task(self, node: dict) -> dict:
-        """Generate an S3 task configuration based on a DBT node. Must be implemented by subclasses."""
-        pass
+    def _get_s3_task(self, node: dict, is_output: bool = False) -> dict:
+        """
+        Generates the dagger s3 task for the databricks-dbt model node
+        """
+        task = S3_TASK_BASE.copy()
+
+        schema = node.get("schema", self._default_schema)
+        table = node.get("name", "")
+        task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
+        task["bucket"], task["path"] = self._get_model_data_location(
+            node, schema, table
+        )
+
+        return task
 
     @staticmethod
     def _get_dummy_task(node: dict, follow_external_dependency: bool = False) -> dict:
@@ -230,25 +240,6 @@ class AthenaDBTConfigParser(DBTConfigParser):
 
         return bucket_name, data_path
 
-    def _get_s3_task(self, node: dict) -> dict:
-        """
-        Generates the dagger s3 task for the DBT model node
-        Args:
-            node: The extracted node from the manifest.json file
-
-        Returns:
-            dict: The dagger s3 task for the DBT model node
-
-        """
-        task = S3_TASK_BASE.copy()
-
-        schema = node.get("schema", self._default_schema)
-        table = node.get("name", "")
-        task["name"] = f"{schema}__{table}_s3"
-        task["bucket"], task["path"] = self._get_model_data_location(
-            node, schema, table
-        )
-        return task
 
     def _generate_dagger_output(self, node: dict):
         """
@@ -267,7 +258,7 @@ class AthenaDBTConfigParser(DBTConfigParser):
         ) or node.get("name").startswith("stg_"):
             return [self._get_dummy_task(node)]
         else:
-            return [self._get_table_task(node), self._get_s3_task(node)]
+            return [self._get_table_task(node), self._get_s3_task(node, is_output=True)]
 
 
 class DatabricksDBTConfigParser(DBTConfigParser):
@@ -313,22 +304,6 @@ class DatabricksDBTConfigParser(DBTConfigParser):
 
         return bucket_name, data_path
 
-    def _get_s3_task(self, node: dict) -> dict:
-        """
-        Generates the dagger s3 task for the databricks-dbt model node
-        """
-        task = S3_TASK_BASE.copy()
-
-        catalog = node.get("database", self._default_catalog)
-        schema = node.get("schema", self._default_schema)
-        table = node.get("name", "")
-        task["name"] = f"{catalog}__{schema}__{table}_s3"
-        task["bucket"], task["path"] = self._get_model_data_location(
-            node, schema, table
-        )
-
-        return task
-
     def _generate_dagger_output(self, node: dict):
         """
         Generates the dagger output for the DBT model node with the databricks-dbt adapter.
@@ -345,10 +320,12 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         if node.get("config", {}).get("materialized") in (
             "view",
             "ephemeral",
-        ) or node.get("name").startswith("stg_"):
+        ) or node.get("name").startswith("stg_") or "preparation" in "preparation" in node.get(
+            "schema", ""
+        ):
             return [self._get_dummy_task(node)]
         else:
-            output_tasks = [self._get_table_task(node), self._get_s3_task(node)]
+            output_tasks = [self._get_table_task(node), self._get_s3_task(node, is_output=True)]
             if self._create_external_athena_table:
                 output_tasks.append(self._get_athena_table_task(node))
             return output_tasks

@@ -237,7 +237,7 @@ DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     },
     {
         "bucket": "chodata-data-lake",
-        "name": "marts__analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "analytics_warehouse/data/marts/analytics_engineering/model2",
         "type": "s3",
     },
@@ -281,7 +281,7 @@ DATABRICKS_EXPECTED_MODEL_NODE = [
     },
     {
         "bucket": "chodata-data-lake",
-        "name": "marts__analytics_engineering__model1_s3",
+        "name": "s3_model1",
         "path": "analytics_warehouse/data/marts/analytics_engineering/model1",
         "type": "s3",
     },
@@ -303,7 +303,7 @@ DATABRICKS_EXPECTED_DAGGER_INPUTS = [
     },
     {
         "bucket": "chodata-data-lake",
-        "name": "marts__analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "analytics_warehouse/data/marts/analytics_engineering/model2",
         "type": "s3",
     },
@@ -362,7 +362,7 @@ DATABRICKS_EXPECTED_DAGGER_OUTPUTS = [
     },
     {
         "bucket": "chodata-data-lake",
-        "name": "marts__analytics_engineering__model1_s3",
+        "name": "output_s3_path",
         "path": "analytics_warehouse/data/marts/analytics_engineering/model1",
         "type": "s3",
     },
