@@ -7,10 +7,9 @@ DATABRICKS_DBT_PROFILE_FIXTURE = {
                 "schema": "analytics_engineering",
                 "host": "xxx.databricks.com",
                 "http_path": "/sql/1.0/warehouses/xxx",
-                "token": "{{ env_var('SECRETDATABRICKS') }}"
+                "token": "{{ env_var('SECRETDATABRICKS') }}",
             },
         }
-
     }
 }
 
@@ -268,7 +267,7 @@ DATABRICKS_EXPECTED_EPHEMERAL_NODE = [
         "name": "stg_core_schema1__table1",
         "type": "dummy",
         "follow_external_dependency": True,
-    }
+    },
 ]
 
 DATABRICKS_EXPECTED_MODEL_NODE = [
@@ -372,7 +371,7 @@ DATABRICKS_EXPECTED_DAGGER_OUTPUTS = [
         "schema": "analytics_engineering",
         "table": "model1",
         "type": "athena",
-    }
+    },
 ]
 
 DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
@@ -381,5 +380,3 @@ DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
         "name": "stg_core_schema2__table2",
     },
 ]
-
-

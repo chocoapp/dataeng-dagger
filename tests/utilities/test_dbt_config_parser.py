@@ -3,7 +3,10 @@ import unittest
 from unittest import skip
 from unittest.mock import patch, MagicMock
 
-from dagger.utilities.dbt_config_parser import AthenaDBTConfigParser, DatabricksDBTConfigParser
+from dagger.utilities.dbt_config_parser import (
+    AthenaDBTConfigParser,
+    DatabricksDBTConfigParser,
+)
 from dagger.utilities.module import Module
 from tests.fixtures.modules.dbt_config_parser_fixtures_athena import *
 from tests.fixtures.modules.dbt_config_parser_fixtures_databricks import *
@@ -94,12 +97,20 @@ class TestAthenaDBTConfigParser(unittest.TestCase):
 
 
 class TestDatabricksDBTConfigParser(unittest.TestCase):
-    @patch("builtins.open", new_callable=MagicMock, read_data=DATABRICKS_DBT_MANIFEST_FILE_FIXTURE)
+    @patch(
+        "builtins.open",
+        new_callable=MagicMock,
+        read_data=DATABRICKS_DBT_MANIFEST_FILE_FIXTURE,
+    )
     @patch("json.loads", return_value=DATABRICKS_DBT_MANIFEST_FILE_FIXTURE)
     @patch("yaml.safe_load", return_value=DATABRICKS_DBT_PROFILE_FIXTURE)
     def setUp(self, mock_open, mock_json_load, mock_safe_load):
-        self._dbt_config_parser = DatabricksDBTConfigParser(DATABRICKS_DEFAULT_CONFIG_PARAMS)
-        self._sample_dbt_node = DATABRICKS_DBT_MANIFEST_FILE_FIXTURE["nodes"]["model.main.model1"]
+        self._dbt_config_parser = DatabricksDBTConfigParser(
+            DATABRICKS_DEFAULT_CONFIG_PARAMS
+        )
+        self._sample_dbt_node = DATABRICKS_DBT_MANIFEST_FILE_FIXTURE["nodes"][
+            "model.main.model1"
+        ]
 
     @skip("Run only locally")
     def test_generate_task_configs(self):
@@ -140,7 +151,10 @@ class TestDatabricksDBTConfigParser(unittest.TestCase):
                 "model3",
                 DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES,
             ),
-            ("stg_core_schema2__table2", DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS),
+            (
+                "stg_core_schema2__table2",
+                DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS,
+            ),
             ("int_model2", DATABRICKS_EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS),
         ]
         for mock_input, expected_output in fixtures:
@@ -151,7 +165,10 @@ class TestDatabricksDBTConfigParser(unittest.TestCase):
     def test_generate_io_outputs(self):
         fixtures = [
             ("model1", DATABRICKS_EXPECTED_DAGGER_OUTPUTS),
-            ("stg_core_schema2__table2", DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS),
+            (
+                "stg_core_schema2__table2",
+                DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS,
+            ),
         ]
         for mock_input, expected_output in fixtures:
             _, result = self._dbt_config_parser.generate_dagger_io(mock_input)

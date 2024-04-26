@@ -28,7 +28,7 @@ class DbtTask(BatchTask):
                     attribute_name="target_name",
                     parent_fields=["task_parameters"],
                     comment="Which target to load for the given profile "
-                            "(--target dbt option). Default is 'default'",
+                    "(--target dbt option). Default is 'default'",
                 ),
                 Attribute(
                     attribute_name="select",
@@ -52,7 +52,7 @@ class DbtTask(BatchTask):
                     required=False,
                     parent_fields=["task_parameters"],
                     comment="Specify whether to create an external Athena table for the model",
-                )
+                ),
             ]
         )
 
@@ -66,7 +66,9 @@ class DbtTask(BatchTask):
         self._select = self.parse_attribute("select")
         self._dbt_command = self.parse_attribute("dbt_command")
         self._vars = self.parse_attribute("vars")
-        self._create_external_athena_table = self.parse_attribute("create_external_athena_table")
+        self._create_external_athena_table = self.parse_attribute(
+            "create_external_athena_table"
+        )
 
     @property
     def project_dir(self):

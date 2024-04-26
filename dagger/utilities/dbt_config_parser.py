@@ -134,7 +134,9 @@ class DBTConfigParser(ABC):
             task = self._get_dummy_task(node)
             dagger_tasks.append(task)
         elif node.get("resource_type") == "source":
-            table_task = self._get_athena_table_task(node, follow_external_dependency=True)
+            table_task = self._get_athena_table_task(
+                node, follow_external_dependency=True
+            )
             dagger_tasks.append(table_task)
         elif node.get("config", {}).get("materialized") == "ephemeral":
             task = self._get_dummy_task(node, follow_external_dependency=True)
@@ -192,6 +194,7 @@ class DBTConfigParser(ABC):
 
 class AthenaDBTConfigParser(DBTConfigParser):
     """Implementation for Athena configurations."""
+
     def __init__(self, default_config_parameters: dict):
         super().__init__(default_config_parameters)
         self._profile_name = "athena"
@@ -199,7 +202,6 @@ class AthenaDBTConfigParser(DBTConfigParser):
         self._default_data_dir = self._target_config.get(
             "s3_data_dir"
         ) or self._target_config.get("s3_staging_dir")
-
 
     def _get_table_task(
         self, node: dict, follow_external_dependency: bool = False
@@ -217,7 +219,9 @@ class AthenaDBTConfigParser(DBTConfigParser):
 
         return task
 
-    def _get_athena_table_task(self, node: dict, follow_external_dependency: bool = False) -> dict:
+    def _get_athena_table_task(
+        self, node: dict, follow_external_dependency: bool = False
+    ) -> dict:
         return self._get_table_task(node, follow_external_dependency)
 
     def _get_model_data_location(
@@ -247,11 +251,12 @@ class AthenaDBTConfigParser(DBTConfigParser):
         """
         task = S3_TASK_BASE.copy()
 
-
         schema = node.get("schema", self._default_schema)
         table = node.get("name", "")
         task["name"] = f"{schema}__{table}_s3"
-        task["bucket"], task["path"] = self._get_model_data_location(node, schema, table)
+        task["bucket"], task["path"] = self._get_model_data_location(
+            node, schema, table
+        )
         return task
 
     def _generate_dagger_output(self, node: dict):
@@ -282,7 +287,9 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         self._profile_name = "databricks"
         self._default_catalog = self._target_config.get("catalog")
         self._athena_dbt_parser = AthenaDBTConfigParser(default_config_parameters)
-        self._create_external_athena_table = default_config_parameters.get("create_external_athena_table", False)
+        self._create_external_athena_table = default_config_parameters.get(
+            "create_external_athena_table", False
+        )
 
     def _get_table_task(
         self, node: dict, follow_external_dependency: bool = False
@@ -303,7 +310,9 @@ class DatabricksDBTConfigParser(DBTConfigParser):
 
         return task
 
-    def _get_athena_table_task(self, node: dict, follow_external_dependency: bool = False) -> dict:
+    def _get_athena_table_task(
+        self, node: dict, follow_external_dependency: bool = False
+    ) -> dict:
         return self._athena_dbt_parser._get_table_task(node, follow_external_dependency)
 
     def _get_model_data_location(

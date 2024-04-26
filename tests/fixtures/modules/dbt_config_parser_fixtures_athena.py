@@ -256,7 +256,7 @@ EXPECTED_EPHEMERAL_NODE = [
         "name": "stg_core_schema1__table1",
         "type": "dummy",
         "follow_external_dependency": True,
-    }
+    },
 ]
 
 EXPECTED_MODEL_NODE = [

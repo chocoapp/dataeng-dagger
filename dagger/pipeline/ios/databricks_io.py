@@ -10,9 +10,7 @@ class DatabricksIO(IO):
         cls.add_config_attributes(
             [
                 Attribute(attribute_name="catalog"),
-                Attribute(
-                    attribute_name="schema"
-                ),
+                Attribute(attribute_name="schema"),
                 Attribute(attribute_name="table"),
             ]
         )
