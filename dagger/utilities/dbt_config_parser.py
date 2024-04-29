@@ -26,9 +26,11 @@ class DBTConfigParser(ABC):
             self._get_manifest_path(), file_type="json"
         )
         profile_data = self._load_file(self._get_profile_path(), file_type="yaml")
-        self._target_config = profile_data[self._profile_name]["outputs"][
-            self._target_name
-        ]
+        self._target_config = (
+            profile_data[self._profile_name]["outputs"].get(self._target_name)
+            if self._profile_name == "athena"
+            else profile_data[self._profile_name]["outputs"]["data"]
+        )  # if databricks, get the default catalog and schema from the data output
         self._default_schema = self._target_config.get("schema", "")
         self._nodes_in_manifest = self._manifest_data.get("nodes", {})
         self._sources_in_manifest = self._manifest_data.get("sources", {})
@@ -242,9 +244,7 @@ class AthenaDBTConfigParser(DBTConfigParser):
         table = node.get("name", "")
         task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
         task["bucket"] = self._default_data_bucket
-        _, task["path"] = self._get_model_data_location(
-            node, schema, table
-        )
+        _, task["path"] = self._get_model_data_location(node, schema, table)
 
         return task
 
@@ -339,15 +339,21 @@ class DatabricksDBTConfigParser(DBTConfigParser):
             dict: The dagger output, which is a combination of an athena and s3 task for the DBT model node
 
         """
-        if node.get("config", {}).get("materialized") in (
-            "view",
-            "ephemeral",
-        ) or node.get("name").startswith("stg_") or "preparation" in "preparation" in node.get(
-            "schema", ""
+        if (
+            node.get("config", {}).get("materialized")
+            in (
+                "view",
+                "ephemeral",
+            )
+            or node.get("name").startswith("stg_")
+            or "preparation" in "preparation" in node.get("schema", "")
         ):
             return [self._get_dummy_task(node)]
         else:
-            output_tasks = [self._get_table_task(node), self._get_s3_task(node, is_output=True)]
+            output_tasks = [
+                self._get_table_task(node),
+                self._get_s3_task(node, is_output=True),
+            ]
             if self._create_external_athena_table:
                 output_tasks.append(self._get_athena_table_task(node))
             return output_tasks
