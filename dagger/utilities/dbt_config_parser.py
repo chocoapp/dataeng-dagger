@@ -346,7 +346,7 @@ class DatabricksDBTConfigParser(DBTConfigParser):
                 "ephemeral",
             )
             or node.get("name").startswith("stg_")
-            or "preparation" in "preparation" in node.get("schema", "")
+            or "preparation" in node.get("schema", "")
         ):
             return [self._get_dummy_task(node)]
         else:
