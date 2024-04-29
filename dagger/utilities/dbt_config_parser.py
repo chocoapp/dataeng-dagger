@@ -87,20 +87,12 @@ class DBTConfigParser(ABC):
         """Get the S3 path of the DBT model relative to the data bucket. Must be implemented by subclasses."""
         pass
 
+    @abstractmethod
     def _get_s3_task(self, node: dict, is_output: bool = False) -> dict:
         """
-        Generates the dagger s3 task for the databricks-dbt model node
+        Generate an S3 task for a DBT node for the specific dbt-adapter. Must be implemented by subclasses.
         """
-        task = S3_TASK_BASE.copy()
-
-        schema = node.get("schema", self._default_schema)
-        table = node.get("name", "")
-        task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
-        task["bucket"], task["path"] = self._get_model_data_location(
-            node, schema, table
-        )
-
-        return task
+        pass
 
     @staticmethod
     def _get_dummy_task(node: dict, follow_external_dependency: bool = False) -> dict:
@@ -240,6 +232,21 @@ class AthenaDBTConfigParser(DBTConfigParser):
 
         return bucket_name, data_path
 
+    def _get_s3_task(self, node: dict, is_output: bool = False) -> dict:
+        """
+        Generates the dagger s3 task for the athena-dbt model node
+        """
+        task = S3_TASK_BASE.copy()
+
+        schema = node.get("schema", self._default_schema)
+        table = node.get("name", "")
+        task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
+        task["bucket"] = self._default_data_bucket
+        _, task["path"] = self._get_model_data_location(
+            node, schema, table
+        )
+
+        return task
 
     def _generate_dagger_output(self, node: dict):
         """
@@ -303,6 +310,21 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         bucket_name, data_path = split[0], "/".join(split[1:])
 
         return bucket_name, data_path
+
+    def _get_s3_task(self, node: dict, is_output: bool = False) -> dict:
+        """
+        Generates the dagger s3 task for the databricks-dbt model node
+        """
+        task = S3_TASK_BASE.copy()
+
+        schema = node.get("schema", self._default_schema)
+        table = node.get("name", "")
+        task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
+        task["bucket"], task["path"] = self._get_model_data_location(
+            node, schema, table
+        )
+
+        return task
 
     def _generate_dagger_output(self, node: dict):
         """
