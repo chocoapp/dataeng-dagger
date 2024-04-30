@@ -22,7 +22,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "unique_id": "model.main.model1",
             "resource_type": "model",
             "config": {
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts/analytics_engineering",
                 "materialized": "incremental",
                 "incremental_strategy": "insert_overwrite",
             },
@@ -30,7 +30,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "tags": ["daily"],
             "unrendered_config": {
                 "materialized": "incremental",
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts/analytics_engineering",
                 "incremental_strategy": "insert_overwrite",
                 "partitioned_by": ["year", "month", "day", "dt"],
                 "tags": ["daily"],
@@ -90,7 +90,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "unique_id": "model.main.model2",
             "resource_type": "model",
             "config": {
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts/analytics_engineering",
                 "materialized": "table",
             },
             "depends_on": {"macros": [], "nodes": []},
@@ -103,7 +103,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "resource_type": "model",
             "config": {
                 "materialized": "ephemeral",
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate/analytics_engineering",
             },
             "depends_on": {
                 "macros": [],
@@ -128,7 +128,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "schema": "analytics_engineering",
             "unique_id": "model.main.model3",
             "config": {
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/marts/analytics_engineering",
             },
             "depends_on": {
                 "macros": [],
@@ -147,7 +147,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
             "schema": "analytics_engineering",
             "config": {
                 "materialized": "ephemeral",
-                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate",
+                "location_root": "s3://chodata-data-lake/analytics_warehouse/data/intermediate/analytics_engineering",
             },
             "depends_on": {
                 "macros": [],
