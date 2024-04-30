@@ -33,6 +33,8 @@ class DbtCreator(BatchCreator):
             command.append(f"--vars='{dbt_vars}'")
         if self._create_external_athena_table:
             command.append(f"--create_external_athena_table={self._create_external_athena_table}")
-        command.append(super()._generate_command())
-
+        for param_name, param_value in self._template_parameters.items():
+            command.append(
+                f"--{param_name}={param_value}"
+            )
         return command
