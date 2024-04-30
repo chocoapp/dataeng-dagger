@@ -305,7 +305,7 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         Gets the S3 path of the dbt model relative to the data bucket.
         """
         location_root = node.get("config", {}).get("location_root")
-        location = join(location_root, schema, model_name)
+        location = join(location_root, model_name)
         split = location.split("//")[1].split("/")
         bucket_name, data_path = split[0], "/".join(split[1:])
 
