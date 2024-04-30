@@ -1,7 +1,10 @@
 import logging
 from os import path
 from mergedeep import merge
-from dagger.utilities.dbt_config_parser import DBTConfigParser
+from dagger.utilities.dbt_config_parser import (
+    AthenaDBTConfigParser,
+    DatabricksDBTConfigParser,
+)
 
 import yaml
 
@@ -25,8 +28,11 @@ class Module:
         self._override_parameters = config.get("override_parameters", {})
         self._default_parameters = config.get("default_parameters", {})
 
-        if 'dbt' in self._tasks.keys():
-            self._dbt_module = DBTConfigParser(self._default_parameters)
+        if "dbt" in self._tasks.keys():
+            if self._default_parameters.get("profile_name") == "athena":
+                self._dbt_module = AthenaDBTConfigParser(self._default_parameters)
+            if self._default_parameters.get("profile_name") == "databricks":
+                self._dbt_module = DatabricksDBTConfigParser(self._default_parameters)
 
     @staticmethod
     def read_yaml(yaml_str):

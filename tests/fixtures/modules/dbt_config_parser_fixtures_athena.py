@@ -1,3 +1,23 @@
+DBT_PROFILE_FIXTURE = {
+    "athena": {
+        "outputs": {
+            "data": {
+                "aws_profile_name": "data",
+                "database": "awsdatacatalog",
+                "num_retries": 10,
+                "region_name": "eu-west-1",
+                "s3_data_dir": "s3://bucket1-data-lake/path1/tmp",
+                "s3_data_naming": "schema_table",
+                "s3_staging_dir": "s3://bucket1-data-lake/path1/",
+                "schema": "analytics_engineering",
+                "threads": 4,
+                "type": "athena",
+                "work_group": "primary",
+            },
+        }
+    }
+}
+
 DBT_MANIFEST_FILE_FIXTURE = {
     "nodes": {
         "model.main.model1": {
@@ -162,26 +182,6 @@ DBT_MANIFEST_FILE_FIXTURE = {
     },
 }
 
-DBT_PROFILE_FIXTURE = {
-    "main": {
-        "outputs": {
-            "data": {
-                "aws_profile_name": "data",
-                "database": "awsdatacatalog",
-                "num_retries": 10,
-                "region_name": "eu-west-1",
-                "s3_data_dir": "s3://bucket1-data-lake/path1/tmp",
-                "s3_data_naming": "schema_table",
-                "s3_staging_dir": "s3://bucket1-data-lake/path1/",
-                "schema": "analytics_engineering",
-                "threads": 4,
-                "type": "athena",
-                "work_group": "primary",
-            },
-        }
-    }
-}
-
 EXPECTED_STAGING_NODE = [
     {
         "name": "stg_core_schema1__table1",
@@ -226,7 +226,7 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "path2/model2",
         "type": "s3",
     },
@@ -256,7 +256,7 @@ EXPECTED_EPHEMERAL_NODE = [
         "name": "stg_core_schema1__table1",
         "type": "dummy",
         "follow_external_dependency": True,
-    }
+    },
 ]
 
 EXPECTED_MODEL_NODE = [
@@ -269,7 +269,7 @@ EXPECTED_MODEL_NODE = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
+        "name": "s3_model1",
         "path": "path1/model1",
         "type": "s3",
     },
@@ -290,7 +290,7 @@ EXPECTED_DAGGER_INPUTS = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model2_s3",
+        "name": "s3_model2",
         "path": "path2/model2",
         "type": "s3",
     },
@@ -339,7 +339,7 @@ EXPECTED_DAGGER_OUTPUTS = [
     },
     {
         "bucket": "bucket1-data-lake",
-        "name": "analytics_engineering__model1_s3",
+        "name": "output_s3_path",
         "path": "path1/model1",
         "type": "s3",
     },

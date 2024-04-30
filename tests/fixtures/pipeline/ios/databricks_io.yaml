@@ -1,0 +1,11 @@
+type: databricks
+name: test
+catalog: test_catalog
+schema: test_schema
+table: test_table
+
+
+
+# Other attributes:
+
+# has_dependency:                # Weather this i/o should be added to the dependency graph or not. Default is True
