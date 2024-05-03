@@ -28,12 +28,6 @@ class Module:
         self._override_parameters = config.get("override_parameters", {})
         self._default_parameters = config.get("default_parameters", {})
 
-        if "dbt" in self._tasks.keys():
-            if self._default_parameters.get("profile_name") == "athena":
-                self._dbt_module = AthenaDBTConfigParser(self._default_parameters)
-            if self._default_parameters.get("profile_name") == "databricks":
-                self._dbt_module = DatabricksDBTConfigParser(self._default_parameters)
-
     @staticmethod
     def read_yaml(yaml_str):
         try:
@@ -85,6 +79,11 @@ class Module:
             template_parameters = {}
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
+            if "dbt" in self._tasks.keys():
+                if template_parameters.get("profile_name") == "athena":
+                    self._dbt_module = AthenaDBTConfigParser(template_parameters)
+                if template_parameters.get("profile_name") == "databricks":
+                    self._dbt_module = DatabricksDBTConfigParser(template_parameters)
 
             for task, task_yaml in self._tasks.items():
                 task_name = f"{branch_name}_{task}"
