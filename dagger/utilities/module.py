@@ -6,6 +6,8 @@ from dagger.utilities.dbt_config_parser import (
     DatabricksDBTConfigParser,
 )
 
+import jinja2
+
 import yaml
 
 _logger = logging.getLogger("root")
@@ -48,19 +50,13 @@ class Module:
 
     @staticmethod
     def replace_template_parameters(_task_str, _template_parameters):
-        for _key, _value in _template_parameters.items():
-            if type(_value) == str:
-                try:
-                    int_value = int(_value)
-                    _value = f'"{_value}"'
-                except:
-                    pass
-            locals()[_key] = _value
+        environment = jinja2.Environment()
+        template = environment.from_string(_task_str)
+        rendered_task = template.render(_template_parameters)
 
         return (
-            _task_str.format(**locals())
-            .replace("{", "{{")
-            .replace("}", "}}")
+            rendered_task
+            # TODO Remove this hack and use Jinja escaping instead of special expression in template files
             .replace("__CBS__", "{")
             .replace("__CBE__", "}")
         )
@@ -79,11 +75,21 @@ class Module:
             template_parameters = {}
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
+            template_parameters['branch_name'] = branch_name
+
+            dbt_manifest = None
             if "dbt" in self._tasks.keys():
                 if template_parameters.get("profile_name") == "athena":
                     self._dbt_module = AthenaDBTConfigParser(template_parameters)
                 if template_parameters.get("profile_name") == "databricks":
                     self._dbt_module = DatabricksDBTConfigParser(template_parameters)
+
+                dbt_manifest = {}
+                dbt_manifest['nodes'] = self._dbt_module.nodes_in_manifest
+                dbt_manifest['sources'] = self._dbt_module.sources_in_manifest
+
+                template_parameters["dbt_manifest"] = dbt_manifest
+                template_parameters["dbt_default_schema"] = self._dbt_module.dbt_default_schema
 
             for task, task_yaml in self._tasks.items():
                 task_name = f"{branch_name}_{task}"

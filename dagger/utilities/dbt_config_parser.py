@@ -35,6 +35,18 @@ class DBTConfigParser(ABC):
         self._nodes_in_manifest = self._manifest_data.get("nodes", {})
         self._sources_in_manifest = self._manifest_data.get("sources", {})
 
+    @property
+    def nodes_in_manifest(self):
+        return self._nodes_in_manifest
+
+    @property
+    def sources_in_manifest(self):
+        return self._sources_in_manifest
+
+    @property
+    def dbt_default_schema(self):
+        return self._default_schema
+
     def _get_manifest_path(self) -> str:
         """
         Construct path for manifest.json file based on configuration parameters.
