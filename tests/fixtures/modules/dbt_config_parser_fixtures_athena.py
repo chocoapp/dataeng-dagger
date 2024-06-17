@@ -58,7 +58,7 @@ DBT_MANIFEST_FILE_FIXTURE = {
             "unique_id": "model.main.stg_core_schema1__table1",
             "name": "stg_core_schema1__table1",
             "config": {
-                "materialized": "view",
+                "materialized": "table",
             },
             "depends_on": {
                 "macros": [],
@@ -235,6 +235,20 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
         "type": "dummy",
         "follow_external_dependency": True,
     },
+    {
+        "type": "athena",
+        "name": "core_schema2__table2_athena",
+        "schema": "core_schema2",
+        "table": "table2",
+        "follow_external_dependency": True,
+    },
+    {
+        "type": "athena",
+        "name": "core_schema2__table3_athena",
+        "schema": "core_schema2",
+        "table": "table3",
+        "follow_external_dependency": True,
+    },
 ]
 
 EXPECTED_EPHEMERAL_NODE = [
@@ -256,7 +270,7 @@ EXPECTED_EPHEMERAL_NODE = [
         "name": "stg_core_schema1__table1",
         "type": "dummy",
         "follow_external_dependency": True,
-    },
+    }
 ]
 
 EXPECTED_MODEL_NODE = [
@@ -282,6 +296,21 @@ EXPECTED_DAGGER_INPUTS = [
         "follow_external_dependency": True,
     },
     {
+        "type": "athena",
+        "name": "core_schema2__table2_athena",
+        "schema": "core_schema2",
+        "table": "table2",
+        "follow_external_dependency": True,
+    },
+    {
+        "type": "athena",
+        "name": "core_schema2__table3_athena",
+        "schema": "core_schema2",
+        "table": "table3",
+        "follow_external_dependency": True,
+    },
+    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
         "name": "analytics_engineering__model2_athena",
         "schema": "analytics_engineering",
         "table": "model2",
@@ -304,12 +333,11 @@ EXPECTED_DAGGER_INPUTS = [
         "name": "int_model2",
         "follow_external_dependency": True,
     },
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
     {
         "name": "stg_core_schema1__table1",
         "type": "dummy",
         "follow_external_dependency": True,
-    },
+    }
 ]
 
 EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [

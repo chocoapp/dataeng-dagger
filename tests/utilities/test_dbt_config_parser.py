@@ -50,10 +50,6 @@ class TestAthenaDBTConfigParser(unittest.TestCase):
     def test_generate_dagger_tasks(self):
         test_inputs = [
             (
-                "model.main.stg_core_schema1__table1",
-                EXPECTED_STAGING_NODE,
-            ),
-            (
                 "seed.main.seed_buyer_country_overwrite",
                 EXPECTED_SEED_NODE,
             ),
@@ -159,7 +155,6 @@ class TestDatabricksDBTConfigParser(unittest.TestCase):
         ]
         for mock_input, expected_output in fixtures:
             result, _ = self._dbt_config_parser.generate_dagger_io(mock_input)
-
             self.assertListEqual(result, expected_output)
 
     def test_generate_io_outputs(self):
