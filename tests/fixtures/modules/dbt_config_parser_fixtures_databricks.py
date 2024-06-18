@@ -194,9 +194,18 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
 
 DATABRICKS_EXPECTED_STAGING_NODE = [
     {
-        "name": "stg_core_schema1__table1",
-        "type": "dummy",
+        "type": "databricks",
         "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+    },
+    {
+        "type": "s3",
+        "name": "s3_stg_core_schema1__table1",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
     },
 ]
 
@@ -223,9 +232,18 @@ DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
         "name": "seed_buyer_country_overwrite",
     },
     {
-        "name": "stg_core_schema1__table1",
-        "type": "dummy",
+        "type": "databricks",
         "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+    },
+    {
+        "type": "s3",
+        "name": "s3_stg_core_schema1__table1",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
     },
     {
         "type": "databricks",
@@ -278,9 +296,18 @@ DATABRICKS_EXPECTED_EPHEMERAL_NODE = [
         "name": "seed_buyer_country_overwrite",
     },
     {
-        "name": "stg_core_schema1__table1",
-        "type": "dummy",
+        "type": "databricks",
         "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+    },
+    {
+        "type": "s3",
+        "name": "s3_stg_core_schema1__table1",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
     },
 ]
 
@@ -347,9 +374,18 @@ DATABRICKS_EXPECTED_DAGGER_INPUTS = [
         "follow_external_dependency": True,
     },
     {
-        "name": "stg_core_schema1__table1",
-        "type": "dummy",
+        "type": "databricks",
         "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+    },
+    {
+        "type": "s3",
+        "name": "s3_stg_core_schema1__table1",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
     },
 ]
 
@@ -374,9 +410,18 @@ DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
 DATABRICKS_EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
     {"name": "seed_buyer_country_overwrite", "type": "dummy"},
     {
-        "name": "stg_core_schema1__table1",
-        "type": "dummy",
+        "type": "databricks",
         "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+    },
+    {
+        "type": "s3",
+        "name": "s3_stg_core_schema1__table1",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
     },
 ]
 
