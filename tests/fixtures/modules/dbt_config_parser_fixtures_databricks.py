@@ -112,7 +112,7 @@ DATABRICKS_DBT_MANIFEST_FILE_FIXTURE = {
         },
         "seed.main.seed_buyer_country_overwrite": {
             "database": "hive_metastore",
-            "schema": "datastg_preparation",
+            "schema": "data_preparation",
             "name": "seed_buyer_country_overwrite",
             "unique_id": "seed.main.seed_buyer_country_overwrite",
             "resource_type": "seed",
@@ -211,8 +211,11 @@ DATABRICKS_EXPECTED_STAGING_NODE = [
 
 DATABRICKS_EXPECTED_SEED_NODE = [
     {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
     }
 ]
 
@@ -220,24 +223,25 @@ DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
-    },
-    {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
     },
     {
         "type": "databricks",
-        "follow_external_dependency": True,
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
+    },
+    {
+        "type": "databricks",
         "catalog": "hive_metastore",
         "schema": "data_preparation",
         "table": "stg_core_schema1__table1",
         "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
+        "follow_external_dependency": True,
     },
     {
         "type": "s3",
@@ -260,9 +264,11 @@ DATABRICKS_EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
         "type": "s3",
     },
     {
-        "name": "stg_core_schema2__table2",
-        "type": "dummy",
-        "follow_external_dependency": True,
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema2__table2",
+        "name": "hive_metastore__data_preparation__stg_core_schema2__table2_databricks",
     },
     {
         "type": "athena",
@@ -284,16 +290,17 @@ DATABRICKS_EXPECTED_EPHEMERAL_NODE = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
     },
     {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
     },
     {
         "type": "databricks",
@@ -330,9 +337,11 @@ DATABRICKS_EXPECTED_MODEL_NODE = [
 
 DATABRICKS_EXPECTED_DAGGER_INPUTS = [
     {
-        "name": "stg_core_schema2__table2",
-        "type": "dummy",
-        "follow_external_dependency": True,
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema2__table2",
+        "name": "hive_metastore__data_preparation__stg_core_schema2__table2_databricks",
     },
     {
         "type": "athena",
@@ -348,7 +357,13 @@ DATABRICKS_EXPECTED_DAGGER_INPUTS = [
         "table": "table3",
         "follow_external_dependency": True,
     },
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
+    },
     {
         "name": "marts__analytics_engineering__model2_databricks",
         "catalog": "marts",
@@ -366,12 +381,10 @@ DATABRICKS_EXPECTED_DAGGER_INPUTS = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
     },
     {
         "type": "databricks",
@@ -404,11 +417,23 @@ DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
         "table": "table3",
         "type": "athena",
     },
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
+    },
 ]
 
 DATABRICKS_EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "seed_buyer_country_overwrite",
+        "name": "hive_metastore__data_preparation__seed_buyer_country_overwrite_databricks",
+    },
     {
         "type": "databricks",
         "follow_external_dependency": True,
@@ -449,7 +474,22 @@ DATABRICKS_EXPECTED_DAGGER_OUTPUTS = [
 
 DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
     {
-        "type": "dummy",
-        "name": "stg_core_schema2__table2",
+        "type": "databricks",
+        "catalog": "hive_metastore",
+        "schema": "data_preparation",
+        "table": "stg_core_schema1__table1",
+        "name": "hive_metastore__data_preparation__stg_core_schema1__table1_databricks",
     },
+    {
+        "type": "s3",
+        "name": "output_s3_path",
+        "bucket": "chodata-data-lake",
+        "path": "analytics_warehouse/data/preparation/stg_core_schema1__table1",
+    },
+    {
+        'type': 'athena',
+        'schema': 'data_preparation',
+        'table': 'stg_core_schema1__table1',
+        'name': 'data_preparation__stg_core_schema1__table1_athena'
+    }
 ]

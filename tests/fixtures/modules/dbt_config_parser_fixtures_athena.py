@@ -201,8 +201,10 @@ EXPECTED_STAGING_NODE = [
 
 EXPECTED_SEED_NODE = [
     {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
     }
 ]
 
@@ -210,16 +212,16 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
     },
     {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
     },
     {
         "name": "analytics_engineering__stg_core_schema1__table1_athena",
@@ -248,9 +250,10 @@ EXPECTED_MODEL_MULTIPLE_DEPENDENCIES = [
         "type": "s3",
     },
     {
-        "name": "stg_core_schema2__table2",
-        "type": "dummy",
-        "follow_external_dependency": True,
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "stg_core_schema2__table2",
+        "name": "analytics_engineering__stg_core_schema2__table2_athena",
     },
     {
         "type": "athena",
@@ -272,16 +275,16 @@ EXPECTED_EPHEMERAL_NODE = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
     },
     {
-        "type": "dummy",
-        "name": "seed_buyer_country_overwrite",
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
     },
     {
         "name": "analytics_engineering__stg_core_schema1__table1_athena",
@@ -316,9 +319,10 @@ EXPECTED_MODEL_NODE = [
 
 EXPECTED_DAGGER_INPUTS = [
     {
-        "name": "stg_core_schema2__table2",
-        "type": "dummy",
-        "follow_external_dependency": True,
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "stg_core_schema2__table2",
+        "name": "analytics_engineering__stg_core_schema2__table2_athena",
     },
     {
         "type": "athena",
@@ -334,7 +338,12 @@ EXPECTED_DAGGER_INPUTS = [
         "table": "table3",
         "follow_external_dependency": True,
     },
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
+    },
     {
         "name": "analytics_engineering__model2_athena",
         "schema": "analytics_engineering",
@@ -351,12 +360,10 @@ EXPECTED_DAGGER_INPUTS = [
     {
         "type": "dummy",
         "name": "int_model3",
-        "follow_external_dependency": True,
     },
     {
         "type": "dummy",
         "name": "int_model2",
-        "follow_external_dependency": True,
     },
     {
         "name": "analytics_engineering__stg_core_schema1__table1_athena",
@@ -388,7 +395,12 @@ EXPECTED_DBT_STAGING_MODEL_DAGGER_INPUTS = [
         "table": "table3",
         "type": "athena",
     },
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
+    }
 ]
 
 EXPECTED_DAGGER_OUTPUTS = [
@@ -408,13 +420,26 @@ EXPECTED_DAGGER_OUTPUTS = [
 
 EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS = [
     {
-        "type": "dummy",
-        "name": "stg_core_schema2__table2",
+        "name": "analytics_engineering__stg_core_schema1__table1_athena",
+        "type": "athena",
+        "table": "stg_core_schema1__table1",
+        "schema": "analytics_engineering",
+    },
+    {
+        "type": "s3",
+        "name": "output_s3_path",
+        "bucket": "bucket1-data-lake",
+        "path": "path2/stg_core_schema1__table1",
     },
 ]
 
 EXPECTED_DBT_INT_MODEL_DAGGER_INPUTS = [
-    {"name": "seed_buyer_country_overwrite", "type": "dummy"},
+    {
+        "type": "athena",
+        "schema": "analytics_engineering",
+        "table": "seed_buyer_country_overwrite",
+        "name": "analytics_engineering__seed_buyer_country_overwrite_athena",
+    },
     {
         "name": "analytics_engineering__stg_core_schema1__table1_athena",
         "type": "athena",

@@ -78,13 +78,14 @@ class TestAthenaDBTConfigParser(unittest.TestCase):
         ]
         for mock_input, expected_output in fixtures:
             result, _ = self._dbt_config_parser.generate_dagger_io(mock_input)
-
+            print(f"result: {result}")
+            print(f"expected_output: {expected_output}")
             self.assertListEqual(result, expected_output)
 
     def test_generate_io_outputs(self):
         fixtures = [
             ("model1", EXPECTED_DAGGER_OUTPUTS),
-            ("stg_core_schema2__table2", EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS),
+            ("stg_core_schema1__table1", EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS),
         ]
         for mock_input, expected_output in fixtures:
             _, result = self._dbt_config_parser.generate_dagger_io(mock_input)
@@ -161,11 +162,10 @@ class TestDatabricksDBTConfigParser(unittest.TestCase):
         fixtures = [
             ("model1", DATABRICKS_EXPECTED_DAGGER_OUTPUTS),
             (
-                "stg_core_schema2__table2",
+                "stg_core_schema1__table1",
                 DATABRICKS_EXPECTED_DBT_STAGING_MODEL_DAGGER_OUTPUTS,
             ),
         ]
         for mock_input, expected_output in fixtures:
             _, result = self._dbt_config_parser.generate_dagger_io(mock_input)
-
             self.assertListEqual(result, expected_output)

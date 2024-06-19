@@ -133,18 +133,25 @@ class DBTConfigParser(ABC):
         """Generate the dagger output for a DBT node. Must be implemented by subclasses."""
         pass
 
+    @abstractmethod
+    def _is_node_preparation_model(self, node: dict):
+        """Define whether it is a preparation model. Must be implemented by subclasses."""
+        pass
+
     def _generate_dagger_tasks(self, node_name: str) -> List[Dict]:
         """
-        Generates the dagger task based on whether the DBT model node is a staging model or not.
-        If the DBT model node represents a DBT seed or an ephemeral model, then a dagger dummy task is generated.
-        If the DBT model node represents a staging model, then a dagger athena task is generated for each source of the DBT model. Apart from this, a dummy task is also generated for the staging model itself.
-        If the DBT model node is not a staging model, then a dagger athena task and an s3 task is generated for the DBT model node itself.
+        Generates dagger tasks based on the type and materialization of the DBT model node.
+
+        - If the node is a DBT source, an Athena table task is generated.
+        - If the node is an ephemeral model, a dummy task is generated, and tasks for its dependent nodes are recursively generated.
+        - If the node is a staging model (preparation model) and not materialized as a table, a table task is generated along with tasks for its dependent nodes.
+        - For other nodes, a table task is generated. If the node is materialized as a table, an additional S3 task is also generated.
+
         Args:
             node_name: The name of the DBT model node
 
         Returns:
             List[Dict]: The respective dagger tasks for the DBT model node
-
         """
         dagger_tasks = []
 
@@ -153,33 +160,36 @@ class DBTConfigParser(ABC):
         else:
             node = self._nodes_in_manifest[node_name]
 
-        if node.get("resource_type") == "seed":
+        resource_type = node.get("resource_type")
+        materialized_type = node.get("config", {}).get("materialized")
+
+        follow_external_dependency = True
+        if resource_type == "seed" or (self._is_node_preparation_model(node) and materialized_type != "table"):
+            follow_external_dependency = False
+
+        if resource_type == "source":
+            table_task = self._get_athena_table_task(
+                node, follow_external_dependency=follow_external_dependency
+            )
+            dagger_tasks.append(table_task)
+
+        elif materialized_type == "ephemeral":
             task = self._get_dummy_task(node)
             dagger_tasks.append(task)
-        elif node.get("resource_type") == "source":
-            table_task = self._get_athena_table_task(
-                node, follow_external_dependency=True
-            )
-            dagger_tasks.append(table_task)
-        elif node.get("config", {}).get("materialized") == "ephemeral" or (
-            (
-                node.get("name").startswith("stg_")
-                or "preparation" in node.get("schema", "")
-            )
-            and node.get("config", {}).get("materialized") != "table"
-        ):
-            task = self._get_dummy_task(node, follow_external_dependency=True)
-            dagger_tasks.append(task)
-
-            ephemeral_parent_node_names = node.get("depends_on", {}).get("nodes", [])
-            for node_name in ephemeral_parent_node_names:
+            for node_name in node.get("depends_on", {}).get("nodes", []):
                 dagger_tasks += self._generate_dagger_tasks(node_name)
-        else:
-            table_task = self._get_table_task(node, follow_external_dependency=True)
-            s3_task = self._get_s3_task(node)
 
+        else:
+            table_task = self._get_table_task(node, follow_external_dependency=follow_external_dependency)
             dagger_tasks.append(table_task)
-            dagger_tasks.append(s3_task)
+
+            if materialized_type in ("table", "incremental"):
+                dagger_tasks.append(self._get_s3_task(node))
+            elif self._is_node_preparation_model(node):
+                for dependent_node_name in node.get("depends_on", {}).get("nodes", []):
+                    dagger_tasks.extend(
+                        self._generate_dagger_tasks(dependent_node_name)
+                    )
 
         return dagger_tasks
 
@@ -222,6 +232,10 @@ class AthenaDBTConfigParser(DBTConfigParser):
         self._default_data_dir = self._target_config.get(
             "s3_data_dir"
         ) or self._target_config.get("s3_staging_dir")
+
+    def _is_node_preparation_model(self, node: dict):
+        """Define whether it is a preparation model."""
+        return node.get("name").startswith("stg_")
 
     def _get_table_task(
         self, node: dict, follow_external_dependency: bool = False
@@ -271,13 +285,14 @@ class AthenaDBTConfigParser(DBTConfigParser):
             dict: The dagger output, which is a combination of an athena and s3 task for the DBT model node
 
         """
-        if node.get("config", {}).get("materialized") in (
-            "view",
-            "ephemeral",
-        ) or node.get("name").startswith("stg_"):
+        materialized_type = node.get("config", {}).get("materialized")
+        if materialized_type == "ephemeral":
             return [self._get_dummy_task(node)]
         else:
-            return [self._get_table_task(node), self._get_s3_task(node, is_output=True)]
+            output_tasks = [self._get_table_task(node)]
+            if materialized_type in ("table", "incremental"):
+                output_tasks.append(self._get_s3_task(node, is_output=True))
+            return output_tasks
 
 
 class DatabricksDBTConfigParser(DBTConfigParser):
@@ -290,6 +305,12 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         self._create_external_athena_table = default_config_parameters.get(
             "create_external_athena_table", False
         )
+
+    def _is_node_preparation_model(self, node: dict):
+        """
+        Define whether it is a preparation model.
+        """
+        return "preparation" in node.get("schema", "")
 
     def _get_table_task(
         self, node: dict, follow_external_dependency: bool = False
@@ -351,21 +372,13 @@ class DatabricksDBTConfigParser(DBTConfigParser):
             dict: The dagger output, which is a combination of an athena and s3 task for the DBT model node
 
         """
-        if (
-            node.get("config", {}).get("materialized")
-            in (
-                "view",
-                "ephemeral",
-            )
-            or node.get("name").startswith("stg_")
-            or "preparation" in node.get("schema", "")
-        ):
+        materialized_type = node.get("config", {}).get("materialized")
+        if materialized_type == "ephemeral":
             return [self._get_dummy_task(node)]
         else:
-            output_tasks = [
-                self._get_table_task(node),
-                self._get_s3_task(node, is_output=True),
-            ]
+            output_tasks = [self._get_table_task(node)]
+            if materialized_type in ("table", "incremental"):
+                output_tasks.append(self._get_s3_task(node, is_output=True))
             if self._create_external_athena_table:
                 output_tasks.append(self._get_athena_table_task(node))
             return output_tasks
