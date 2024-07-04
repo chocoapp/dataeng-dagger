@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
+from airflow.utils.task_group import TaskGroup
 
 TIMEDELTA_PARAMETERS = ['execution_timeout']
 
@@ -10,6 +11,15 @@ class OperatorCreator(ABC):
         self._dag = dag
         self._template_parameters = {}
         self._airflow_parameters = {}
+
+    def _get_existing_task_group_or_create_new(self):
+        group_id = self._task.task_group
+        if self._dag.task_group:
+            for group in self._dag.task_group.children.values():
+                if isinstance(group, TaskGroup) and group.group_id == group_id:
+                    return group
+
+        return TaskGroup(group_id=group_id, dag=self._dag)
 
     @abstractmethod
     def _create_operator(self, kwargs):
@@ -33,6 +43,9 @@ class OperatorCreator(ABC):
 
         if self._task.timeout_in_seconds:
             self._airflow_parameters["execution_timeout"] = self._task.timeout_in_seconds
+
+        if self._task.task_group:
+            self._airflow_parameters["task_group"] = self._get_existing_task_group_or_create_new()
 
         self._fix_timedelta_parameters()
 
