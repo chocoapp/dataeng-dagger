@@ -14,7 +14,7 @@ _logger = logging.getLogger("root")
 
 
 class Module:
-    def __init__(self, path_to_config, target_dir):
+    def __init__(self, path_to_config, target_dir, jinja_parameters):
         self._directory = path.dirname(path_to_config)
         self._target_dir = target_dir or "./"
         self._path_to_config = path_to_config
@@ -29,6 +29,7 @@ class Module:
         self._branches_to_generate = config["branches_to_generate"]
         self._override_parameters = config.get("override_parameters", {})
         self._default_parameters = config.get("default_parameters", {})
+        self._jinja_parameters = jinja_parameters
 
     @staticmethod
     def read_yaml(yaml_str):
@@ -76,6 +77,7 @@ class Module:
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
             template_parameters['branch_name'] = branch_name
+            template_parameters.update(self._jinja_parameters)
 
             dbt_manifest = None
             if "dbt" in self._tasks.keys():
