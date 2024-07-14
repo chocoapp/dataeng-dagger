@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
+from functools import partial
+
 from airflow.utils.task_group import TaskGroup
+
+from dagger.alerts.alert import airflow_task_fail_alerts
 
 TIMEDELTA_PARAMETERS = ['execution_timeout']
 
@@ -46,6 +50,9 @@ class OperatorCreator(ABC):
 
         if self._task.task_group:
             self._airflow_parameters["task_group"] = self._get_existing_task_group_or_create_new()
+
+        if self._task.alerts:
+            self._airflow_parameters["on_failure_callback"] = partial(airflow_task_fail_alerts, self._task.alerts)
 
         self._fix_timedelta_parameters()
 

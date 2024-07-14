@@ -8,6 +8,7 @@ from os.path import join
 from dagger.pipeline.io import IO
 from dagger.pipeline.io_factory import IOFactory
 from dagger.utilities.config_validator import Attribute, ConfigValidator
+from dagger.alerts.alert import alert_configs_to_alerts
 
 _logger = logging.getLogger("configFinder")
 
@@ -58,6 +59,14 @@ class Task(ConfigValidator):
                     format_help="dictionary",
                 ),
                 Attribute(attribute_name="task_parameters", nullable=True),
+                Attribute(
+                    attribute_name="alerts",
+                    required=False,
+                    nullable=True,
+                    validator=list,
+                    format_help="list",
+                    comment="List of alert configurations. For exact format, use dagger init-alerts cli",
+                ),
             ]
         )
 
@@ -74,6 +83,8 @@ class Task(ConfigValidator):
         self._airflow_parameters = self.parse_attribute("airflow_task_parameters") or {}
         self._render_parameters(self._airflow_parameters)
         self._template_parameters = self.parse_attribute("template_parameters") or {}
+        alert_configs = self.parse_attribute("alerts")
+        self._alerts = alert_configs_to_alerts(config_location=self._location, alert_configs=alert_configs, include_default=False)
 
         self._inputs = []
         self._outputs = []
@@ -127,6 +138,10 @@ class Task(ConfigValidator):
     @property
     def template_parameters(self) -> dict:
         return self._template_parameters
+
+    @property
+    def alerts(self):
+        return self._alerts
 
     @property
     def inputs(self) -> List[IO]:

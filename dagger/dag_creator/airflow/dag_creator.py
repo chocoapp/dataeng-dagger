@@ -97,7 +97,7 @@ class DagCreator(GraphTraverserBase):
         default_args = DagCreator._get_default_args()
         default_args.update(pipeline.default_args)
         default_args["owner"] = pipeline.owner.split("@")[0]
-        if len(pipeline.alerts) > 0:
+        if pipeline.alerts:
             default_args["on_failure_callback"] = partial(airflow_task_fail_alerts, pipeline.alerts)
         dag = DAG(
             pipeline.name,
