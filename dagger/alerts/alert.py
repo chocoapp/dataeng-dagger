@@ -118,3 +118,29 @@ def airflow_task_fail_alerts(alerts: List[AlertBase], context):
             run_time,
             task_instance.log_url,
         )
+
+
+def alert_configs_to_alerts(config_location: str, alert_configs: List[dict]) -> List[AlertBase]:
+    """
+    Helper function to turn a list of alert configs into a list of alert objects
+    Args:
+        config_location: The original location of the config file, helps with error messages
+        alert_configs: The list of alert configs
+    Returns:
+        List of Alert objects. If no alert_configs are provided, returns a default alert.
+        If no default alert is provided, returns None
+    """
+    alert_configs = alert_configs or []
+    if len(alert_configs) == 0:
+        alert_configs.append(conf.DEFAULT_ALERT)
+    if len(alert_configs) == 0:
+        return None
+
+    alert_factory = AlertFactory()
+    alerts = []
+    for alert_config in alert_configs:
+        alert = alert_factory.create_alert(
+            alert_config["type"], config_location, alert_config
+        )
+        alerts.append(alert)
+    return alerts

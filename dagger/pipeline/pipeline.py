@@ -2,7 +2,7 @@ from datetime import datetime
 from os.path import join, relpath
 
 from dagger import conf
-from dagger.alerts.alert import AlertBase, AlertFactory
+from dagger.alerts.alert import alert_configs_to_alerts
 from dagger.pipeline.task import Task
 from dagger.utilities.config_validator import Attribute, ConfigValidator
 
@@ -49,6 +49,7 @@ class Pipeline(ConfigValidator):
                     nullable=True,
                     validator=list,
                     format_help="list",
+                    comment="List of alert configurations. For exact format, use dagger init-alerts cli",
                 ),
             ]
         )
@@ -65,12 +66,11 @@ class Pipeline(ConfigValidator):
         self._schedule = self.parse_attribute(attribute_name="schedule")
         self._start_date = self.parse_attribute(attribute_name="start_date")
         self._parameters = self.parse_attribute(attribute_name="dag_parameters") or {}
+        alert_configs = self.parse_attribute("alerts")
+        self._alerts = alert_configs_to_alerts(config_location=self._location, alert_configs=alert_configs)
 
         self._tasks = []
 
-        self._alerts = []
-        self._alert_factory = AlertFactory()
-        self.process_alerts(config["alerts"] or [])
 
     @property
     def directory(self):
@@ -114,18 +114,3 @@ class Pipeline(ConfigValidator):
 
     def add_task(self, task: Task):
         self._tasks.append(task)
-
-    def add_alert(self, alert: AlertBase):
-        self._alerts.append(alert)
-
-    def process_alerts(self, alert_configs):
-        if alert_configs is not None:
-            if len(alert_configs) == 0:
-                alert_configs.append(conf.DEFAULT_ALERT)
-            for alert_config in alert_configs:
-                alert_type = alert_config["type"]
-                self.add_alert(
-                    self._alert_factory.create_alert(
-                        alert_type, join(self.directory, "pipeline.yaml"), alert_config
-                    )
-                )
