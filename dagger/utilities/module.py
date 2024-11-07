@@ -76,6 +76,10 @@ class Module:
     @staticmethod
     def replace_template_parameters(_task_str, _template_parameters):
         environment = jinja2.Environment()
+        loaded_classes = Module.load_plugins()
+        for class_name, class_obj in loaded_classes.items():
+            environment.globals[class_name] = class_obj
+
         template = environment.from_string(_task_str)
         rendered_task = template.render(_template_parameters)
 
