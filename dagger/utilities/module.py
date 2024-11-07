@@ -3,7 +3,7 @@ import inspect
 import logging
 import os
 import pkgutil
-from os import path
+from os import path, environ
 
 import jinja2
 import yaml
@@ -51,7 +51,7 @@ class Module:
         return content
 
     @staticmethod
-    def load_plugins() -> dict:
+    def load_plugins_to_jinja_environment(environment: jinja2.Environment) -> jinja2.Environment:
         """
         Dynamically load all classes(plugins) from the folders defined in the conf.PLUGIN_DIRS variable.
         The folder contains all plugins that are part of the project.
@@ -71,18 +71,14 @@ class Module:
                         spec.loader.exec_module(module)
 
                         for name, obj in inspect.getmembers(module, inspect.isclass):
-                            classes[f"{name}"] = obj
+                            environment.globals[f"{name}"] = obj
 
-        return classes
-
+        return environment
 
     @staticmethod
     def replace_template_parameters(_task_str, _template_parameters):
         environment = jinja2.Environment()
-        loaded_classes = Module.load_plugins()
-        for class_name, class_obj in loaded_classes.items():
-            environment.globals[class_name] = class_obj
-
+        environment = Module.load_plugins_to_jinja_environment(environment)
         template = environment.from_string(_task_str)
         rendered_task = template.render(_template_parameters)
 
