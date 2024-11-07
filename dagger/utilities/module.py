@@ -60,15 +60,18 @@ class Module:
         """
         classes = {}
 
-        for module_info in pkgutil.iter_modules(conf.PLUGIN_DIRS):
-            module_name = module_info.name
-            module_path = os.path.join(module_info.module_finder.path, f"{module_name}.py")
-            spec = importlib.util.spec_from_file_location(module_name, module_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+        for plugin_path in conf.PLUGIN_DIRS:
+            for root, dirs, files in os.walk(plugin_path):
+                for plugin_file in files:
+                    if plugin_file.endswith(".py") and not plugin_file.startswith("__init__"):
+                        module_name = plugin_file.replace(".py", "")
+                        module_path = os.path.join(root, plugin_file)
+                        spec = importlib.util.spec_from_file_location(module_name, module_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
 
-            for name, obj in inspect.getmembers(module, inspect.isclass):
-                classes[f"{name}"] = obj
+                        for name, obj in inspect.getmembers(module, inspect.isclass):
+                            classes[f"{name}"] = obj
 
         return classes
 
