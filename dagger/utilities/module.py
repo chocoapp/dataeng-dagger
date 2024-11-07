@@ -1,14 +1,15 @@
+import importlib
+import inspect
 import logging
+import os
+import pkgutil
 from os import path
-from mergedeep import merge
-from dagger.utilities.dbt_config_parser import (
-    AthenaDBTConfigParser,
-    DatabricksDBTConfigParser,
-)
 
 import jinja2
-
 import yaml
+
+from dagger import conf
+from mergedeep import merge
 
 _logger = logging.getLogger("root")
 
@@ -48,6 +49,29 @@ class Module:
             _logger.error(f"Couldn't load task file: {task}")
             exit(1)
         return content
+
+    @staticmethod
+    def load_plugins() -> dict:
+        """
+        Dynamically load all classes(plugins) from the folders defined in the conf.PLUGIN_DIRS variable.
+        The folder contains all plugins that are part of the project.
+        Returns:
+            dict: A dictionary with the class name as key and the class object as value
+        """
+        classes = {}
+
+        for module_info in pkgutil.iter_modules(conf.PLUGIN_DIRS):
+            module_name = module_info.name
+            module_path = os.path.join(module_info.module_finder.path, f"{module_name}.py")
+            spec = importlib.util.spec_from_file_location(module_name, module_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            for name, obj in inspect.getmembers(module, inspect.isclass):
+                classes[f"{name}"] = obj
+
+        return classes
+
 
     @staticmethod
     def replace_template_parameters(_task_str, _template_parameters):
