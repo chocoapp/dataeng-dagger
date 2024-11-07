@@ -63,7 +63,7 @@ class Module:
         for plugin_path in conf.PLUGIN_DIRS:
             for root, dirs, files in os.walk(plugin_path):
                 for plugin_file in files:
-                    if plugin_file.endswith(".py") and not plugin_file.startswith("__init__"):
+                    if plugin_file.endswith(".py") and not plugin_file.startswith("__"):
                         module_name = plugin_file.replace(".py", "")
                         module_path = os.path.join(root, plugin_file)
                         spec = importlib.util.spec_from_file_location(module_name, module_path)
