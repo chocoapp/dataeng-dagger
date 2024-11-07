@@ -101,6 +101,6 @@ SLACK_TOKEN = alert_config.get('slack_token', None)
 DEFAULT_ALERT = alert_config.get('default_alert', {"type": "slack", "channel": "#airflow-jobs", "mentions": None})
 
 # Plugin parameters
-plugin_config = config.get('plugin', {})
+plugin_config = config.get('plugin', None) or {}
 PLUGIN_DIRS = [os.path.join(AIRFLOW_HOME, path) for path in plugin_config.get('paths', [])]
 logging.info(f"All Python classes will be loaded as plugins from the following directories: {PLUGIN_DIRS}")
