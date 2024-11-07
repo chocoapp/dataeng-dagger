@@ -8,7 +8,7 @@ import importlib.util
 
 import jinja2
 
-from dagger.utilities.module import Module  # Adjust this import according to your actual module structure
+from dagger.utilities.module import Module
 from dagger import conf
 
 TESTS_ROOT = Path(__file__).parent.parent
@@ -17,10 +17,6 @@ class TestLoadPlugins(unittest.TestCase):
 
     def setUp(self):
         self._jinja_environment = jinja2.Environment()
-        loaded_classes = Module.load_plugins()
-        for class_name, class_obj in loaded_classes.items():
-            self._jinja_environment.globals[class_name] = class_obj
-
         self._template = self._jinja_environment.from_string("inputs: {{ SampleFolderPlugin.get_inputs() }}")
 
     @patch("dagger.conf.PLUGIN_DIRS", new=[])
@@ -29,27 +25,19 @@ class TestLoadPlugins(unittest.TestCase):
         # Simulate os.walk returning no Python files
         mock_os_walk.return_value = [("/fake/plugin/dir", [], [])]
 
-        result = Module.load_plugins()
+        result_environment = Module.load_plugins_to_jinja_environment(self._jinja_environment)
 
-        # Expecting an empty dictionary since no plugins were found
-        self.assertEqual(result, {})
+        self.assertNotIn("SampleFolderPlugin", result_environment.globals)
 
     @patch("dagger.conf.PLUGIN_DIRS", new=[str(TESTS_ROOT.joinpath("fixtures/plugins"))])
     def test_load_plugins(self):
+        result_environment = Module.load_plugins_to_jinja_environment(self._jinja_environment)
 
-        result = Module.load_plugins()
-        for name, plugin_class in result.items():
-            result[name] = str(plugin_class)
-
-        expected_classes = {"SampleFolderPlugin": "<class 'sample_folder_plugin.SampleFolderPlugin'>"}
-
-        self.assertEqual(result, expected_classes)
+        self.assertIn("SampleFolderPlugin", result_environment.globals.keys())
 
     @patch("dagger.conf.PLUGIN_DIRS", new=[str(TESTS_ROOT.joinpath("fixtures/plugins"))])
-    def test_load_plugins_in_jinja(self):
-        result = Module.load_plugins()
-        for class_name, class_obj in result.items():
-            self._jinja_environment.globals[class_name] = class_obj
+    def test_load_plugins_render_jinja(self):
+        result_environment = Module.load_plugins_to_jinja_environment(self._jinja_environment)
 
         rendered_task = self._template.render()
         expected_task = "inputs: [{'name': 'sample_folder_plugin_task', 'type': 'dummy'}]"
