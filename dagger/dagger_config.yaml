@@ -58,3 +58,7 @@ alert:
 #    type: slack
 #    channel: "#airflow-jobs"
 #    mentions:
+
+plugin:
+#  paths:
+#    - plugins
