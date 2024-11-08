@@ -1,15 +1,10 @@
-import inspect
-import shutil
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-import os
-import importlib.util
 
 import jinja2
 
 from dagger.utilities.module import Module
-from dagger import conf
 
 TESTS_ROOT = Path(__file__).parent.parent
 
