@@ -58,12 +58,11 @@ class Module:
         Returns:
             dict: A dictionary with the class name as key and the class object as value
         """
-        classes = {}
-
         for plugin_path in conf.PLUGIN_DIRS:
             for root, dirs, files in os.walk(plugin_path):
+                dirs[:] = [directory for directory in dirs if not directory.lower().startswith("test")]
                 for plugin_file in files:
-                    if plugin_file.endswith(".py") and not plugin_file.startswith("__"):
+                    if plugin_file.endswith(".py") and not (plugin_file.startswith("__") or plugin_file.startswith("test")):
                         module_name = plugin_file.replace(".py", "")
                         module_path = os.path.join(root, plugin_file)
                         spec = importlib.util.spec_from_file_location(module_name, module_path)
