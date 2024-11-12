@@ -103,6 +103,7 @@ class MyCustomPlugin:
         return [{"name": f"{branch_name}", "type": "dummy"}]
 ```
 This class defines a `generate_input` method that takes the branch_name from the module config and returns a dummy dagger task.
+
 2. **Loading the Plugin into Dagger:** To load this plugin into Dagger's Jinja2 environment, you need to register it in your `dagger_config.yaml`:
 ```yaml
 # pipeline.yaml
