@@ -39,7 +39,7 @@ class Task(ConfigValidator):
                 Attribute(
                     attribute_name="task_group",
                     required=False,
-                    format_help=str,
+                    format_help="str",
                     comment="Task group name",
                 ),
                 Attribute(
