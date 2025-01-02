@@ -1,6 +1,7 @@
 import base64
 
 from dagger.dag_creator.airflow.operator_creators.batch_creator import BatchCreator
+from dagger.dag_creator.airflow.operators.reverse_etl_batch import ReverseEtlBatchOperator
 import json
 
 
@@ -26,8 +27,7 @@ class ReverseEtlCreator(BatchCreator):
         self._days_to_live = task.days_to_live
 
     def _generate_command(self):
-        command = [self._task.executable_prefix, self._task.executable]
-
+        command = BatchCreator._generate_command(self)
 
         command.append(f"--num_threads={self._num_threads}")
         command.append(f"--batch_size={self._batch_size}")
@@ -53,3 +53,21 @@ class ReverseEtlCreator(BatchCreator):
             command.append(f"--days_to_live={self._days_to_live}")
 
         return command
+
+    def _create_operator(self, **kwargs):
+        overrides = self._task.overrides
+        overrides.update({"command": self._generate_command()})
+
+        job_name = self._validate_job_name(self._task.job_name, self._task.absolute_job_name)
+        batch_op = ReverseEtlBatchOperator(
+            dag=self._dag,
+            task_id=self._task.name,
+            job_name=self._task.name,
+            job_definition=job_name,
+            region_name=self._task.region_name,
+            job_queue=self._task.job_queue,
+            container_overrides=overrides,
+            awslogs_enabled=True,
+            **kwargs,
+        )
+        return batch_op

@@ -31,14 +31,12 @@ class ReverseEtlTask(BatchTask):
                     attribute_name="num_threads",
                     parent_fields=["task_parameters"],
                     required=False,
-                    validator=int,
                     comment="The number of threads to use for the job",
                 ),
                 Attribute(
                     attribute_name="batch_size",
                     parent_fields=["task_parameters"],
                     required=False,
-                    validator=int,
                     comment="The number of rows to fetch in each batch",
                 ),
                 Attribute(
@@ -125,8 +123,8 @@ class ReverseEtlTask(BatchTask):
     def __init__(self, name, pipeline_name, pipeline, job_config):
         super().__init__(name, pipeline_name, pipeline, job_config)
 
-        self.executable = self.executable or "reverse_etl.py"
-        self.executable_prefix = self.executable_prefix or "python"
+        self._executable = self.executable or "reverse_etl.py"
+        self._executable_prefix = self.executable_prefix or "python"
 
         self._assume_role_arn = self.parse_attribute("assume_role_arn")
         self._num_threads = self.parse_attribute("num_threads") or 4
@@ -158,7 +156,7 @@ class ReverseEtlTask(BatchTask):
     def num_threads(self):
         return self._num_threads
 
-    @@property
+    @property
     def batch_size(self):
         return self._batch_size
 
