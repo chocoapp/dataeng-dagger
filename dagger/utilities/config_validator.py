@@ -98,10 +98,14 @@ class ConfigValidator:
 
         cls.init_attributes(orig_cls)
         if parent_class.__name__ != "ConfigValidator":
-            cls.config_attributes[cls.__name__] = (
-                cls.config_attributes[parent_class.__name__]
-                + cls.config_attributes[cls.__name__]
-            )
+            parent_attributes = cls.config_attributes[parent_class.__name__]
+            current_attributes = cls.config_attributes[cls.__name__]
+
+            merged_attributes = {attr.name: attr for attr in parent_attributes}
+            for attr in current_attributes:
+                merged_attributes[attr.name] = attr
+
+            cls.config_attributes[cls.__name__] = list(merged_attributes.values())
 
         attributes_lookup = {}
         for index, attribute in enumerate(cls.config_attributes[cls.__name__]):
