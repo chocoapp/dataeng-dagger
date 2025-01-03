@@ -25,6 +25,7 @@ class ReverseEtlCreator(BatchCreator):
         self._updated_at_column = task.updated_at_column
         self._from_time = task.from_time
         self._days_to_live = task.days_to_live
+        self._output_type = task.output_type
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
@@ -34,6 +35,7 @@ class ReverseEtlCreator(BatchCreator):
         command.append(f"--primary_id_column={self._primary_id_column}")
         command.append(f"--model_name={self._model_name}")
         command.append(f"--project_name={self._project_name}")
+        command.append(f"--output_type={self._output_type}")
 
         if self._assume_role_arn:
             command.append(f"--assume_role_arn={self._assume_role_arn}")

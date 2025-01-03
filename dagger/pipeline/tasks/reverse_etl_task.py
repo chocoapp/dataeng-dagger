@@ -148,6 +148,29 @@ class ReverseEtlTask(BatchTask):
             if not self._from_time:
                 raise ValueError("from_time is required when hash_column or updated_at_column is provided")
 
+        # Making sure the input table name is set as it is expected in the reverse etl job
+        input_index = self._get_io_index(self._inputs)
+        self._inputs[input_index].name = "input_table_name"
+
+        # Making sure the output name is set as it is expected in the reverse etl job
+        output_index = self._get_io_index(self._outputs)
+        self._outputs[output_index].name = "output_name"
+
+        # Extracting the output type from the output definition
+        self._output_type = self._outputs[output_index].ref_name
+        if not self._output_type:
+            raise ValueError("ReverseEtlTask must have an output")
+
+    @staticmethod
+    def _get_io_index(ios):
+        if len([io for io in ios if io.ref_name != "dummy"]) > 1:
+            raise ValueError("ReverseEtlTask can only have one input or output")
+
+        for i, io in enumerate(ios):
+            if io.ref_name != "dummy":
+                return i
+
+
     @property
     def assume_role_arn(self):
         return self._assume_role_arn
@@ -199,3 +222,7 @@ class ReverseEtlTask(BatchTask):
     @property
     def days_to_live(self):
         return self._days_to_live
+
+    @property
+    def output_type(self):
+        return self._output_type

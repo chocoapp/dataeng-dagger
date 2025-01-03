@@ -63,6 +63,10 @@ class IO(ConfigValidator, ABC):
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, value):
+        self._name = value
+
     @property
     def has_dependency(self):
         return self._has_dependency
