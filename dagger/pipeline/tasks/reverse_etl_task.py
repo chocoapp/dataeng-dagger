@@ -8,7 +8,7 @@ class ReverseEtlTask(BatchTask):
     DEFAULT_EXECUTABLE = "reverse_etl.py"
     DEFAULT_NUM_THREADS = 4
     DEFAULT_BATCH_SIZE = 10000
-    DEFAULT_JOB_NAME = "common_batch_jobs/reverse_etl"
+    DEFAULT_JOB_NAME = "common_batch_jobs-reverse_etl"
     DEFAULT_PROJECT_NAME = "feature_store"
 
     @classmethod
