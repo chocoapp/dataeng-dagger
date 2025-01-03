@@ -26,6 +26,7 @@ class ReverseEtlCreator(BatchCreator):
         self._from_time = task.from_time
         self._days_to_live = task.days_to_live
         self._output_type = task.output_type
+        self._region_name = task.region_name
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
@@ -53,6 +54,8 @@ class ReverseEtlCreator(BatchCreator):
             command.append(f"--from_time={self._from_time}")
         if self._days_to_live:
             command.append(f"--days_to_live={self._days_to_live}")
+        if self._region_name:
+            command.append(f"--region_name={self._region_name}")
 
         return command
 
