@@ -4,6 +4,13 @@ from dagger.utilities.config_validator import Attribute
 class ReverseEtlTask(BatchTask):
     ref_name = "reverse_etl"
 
+    DEFAULT_EXECUTABLE_PREFIX = "python"
+    DEFAULT_EXECUTABLE = "reverse_etl.py"
+    DEFAULT_NUM_THREADS = 4
+    DEFAULT_BATCH_SIZE = 10000
+    DEFAULT_JOB_NAME = "common_batch_jobs/reverse_etl"
+    DEFAULT_PROJECT_NAME = "feature_store"
+
     @classmethod
     def init_attributes(cls, orig_cls):
         cls.add_config_attributes(
@@ -123,18 +130,18 @@ class ReverseEtlTask(BatchTask):
     def __init__(self, name, pipeline_name, pipeline, job_config):
         super().__init__(name, pipeline_name, pipeline, job_config)
 
-        self._executable = self.executable or "reverse_etl.py"
-        self._executable_prefix = self.executable_prefix or "python"
+        self._executable = self.executable or self.DEFAULT_EXECUTABLE
+        self._executable_prefix = self.executable_prefix or self.DEFAULT_EXECUTABLE_PREFIX
 
         self._assume_role_arn = self.parse_attribute("assume_role_arn")
-        self._num_threads = self.parse_attribute("num_threads") or 4
-        self._batch_size = self.parse_attribute("batch_size") or 10000
-        self._absolute_job_name = self._absolute_job_name or "common_batch_jobs/reverse_etl"
+        self._num_threads = self.parse_attribute("num_threads") or self.DEFAULT_NUM_THREADS
+        self._batch_size = self.parse_attribute("batch_size") or self.DEFAULT_BATCH_SIZE
+        self._absolute_job_name = self._absolute_job_name or self.DEFAULT_JOB_NAME
         self._primary_id_column = self.parse_attribute("primary_id_column")
         self._secondary_id_column = self.parse_attribute("secondary_id_column")
         self._custom_id_column = self.parse_attribute("custom_id_column")
         self._model_name = self.parse_attribute("model_name")
-        self._project_name = self.parse_attribute("project_name") or "feature_store"
+        self._project_name = self.parse_attribute("project_name") or self.DEFAULT_PROJECT_NAME
         self._is_deleted_column = self.parse_attribute("is_deleted_column")
         self._hash_column = self.parse_attribute("hash_column")
         self._updated_at_column = self.parse_attribute("updated_at_column")
