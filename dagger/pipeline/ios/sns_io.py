@@ -33,7 +33,7 @@ class SnsIO(IO):
         self._sns_topic = self.parse_attribute("sns_topic")
 
     def alias(self):
-        return f"dynamo://{self._region_name or ''}/{self._sns_topic}"
+        return f"sns://{self._region_name or ''}/{self._sns_topic}"
 
     @property
     def rendered_name(self):
@@ -41,7 +41,7 @@ class SnsIO(IO):
 
     @property
     def airflow_name(self):
-        return f"dynamo-{'-'.join([name_part for name_part in [self._region_name, self._sns_topic] if name_part])}"
+        return f"sns-{'-'.join([name_part for name_part in [self._region_name, self._sns_topic] if name_part])}"
 
     @property
     def region_name(self):
