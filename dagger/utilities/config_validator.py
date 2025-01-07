@@ -101,6 +101,7 @@ class ConfigValidator:
             parent_attributes = cls.config_attributes[parent_class.__name__]
             current_attributes = cls.config_attributes[cls.__name__]
 
+            # Overwriting attributes in parent operator if they are also existing in the child operator
             merged_attributes = {attr.name: attr for attr in parent_attributes}
             for attr in current_attributes:
                 merged_attributes[attr.name] = attr
