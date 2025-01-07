@@ -104,3 +104,9 @@ DEFAULT_ALERT = alert_config.get('default_alert', {"type": "slack", "channel": "
 plugin_config = config.get('plugin', None) or {}
 PLUGIN_DIRS = [os.path.join(AIRFLOW_HOME, path) for path in plugin_config.get('paths', [])]
 logging.info(f"All Python classes will be loaded as plugins from the following directories: {PLUGIN_DIRS}")
+
+# ReverseETL parameters
+reverse_etl_config = config.get('reverse_etl', None) or {}
+REVERSE_ETL_DEFAULT_JOB_NAME = reverse_etl_config.get('default_job_name', None)
+REVERSE_ETL_DEFAULT_EXECUTABLE_PREFIX = reverse_etl_config.get('default_executable_prefix', None)
+REVERSE_ETL_DEFAULT_EXECUTABLE = reverse_etl_config.get('default_executable', None)

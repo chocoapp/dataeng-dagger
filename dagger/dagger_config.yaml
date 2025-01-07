@@ -62,3 +62,8 @@ alert:
 plugin:
 #  paths:
 #    - plugins
+
+reverse_etl:
+#  default_job_name:
+#  default_executable_prefix:
+#  default_executable:
