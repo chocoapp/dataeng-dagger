@@ -9,6 +9,7 @@ from dagger.pipeline.tasks import (
     redshift_load_task,
     redshift_transform_task,
     redshift_unload_task,
+    reverse_etl_task,
     spark_task,
     sqoop_task,
 )
