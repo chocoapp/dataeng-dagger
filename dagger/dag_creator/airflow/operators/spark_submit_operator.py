@@ -85,10 +85,50 @@ class SparkSubmitOperator(DaggerBaseOperator):
         else:
             return None
 
+
+    def get_application_id_by_name(self, emr_master_instance_id, application_name):
+        command = f"yarn application -list -appStates RUNNING | grep {application_name}"
+
+        response = self.ssm_client.send_command(
+            InstanceIds=[emr_master_instance_id],
+            DocumentName="AWS-RunShellScript",
+            Parameters={"commands": [command]}
+        )
+
+        command_id = response['Command']['CommandId']
+        time.sleep(10)  # Wait for the command to execute
+
+        output = self.ssm_client.get_command_invocation(
+            CommandId=command_id,
+            InstanceId=emr_master_instance_id
+        )
+
+        stdout = output['StandardOutputContent']
+        for line in stdout.split('\n'):
+            if application_name in line:
+                application_id = line.split()[0]
+                return application_id
+        return None
+
+    def kill_spark_job(self, emr_master_instance_id, application_id):
+        """
+        Kill the Spark job using YARN
+        """
+        kill_command = f"yarn application -kill {application_id}"
+        self.ssm_client.send_command(
+            InstanceIds=[emr_master_instance_id],
+            DocumentName="AWS-RunShellScript",
+            Parameters={"commands": [kill_command]}
+        )
+        raise AirflowException(
+            f"Spark job exceeded the execution timeout of {self._execution_timeout} seconds and was terminated.")
+
+
     def execute(self, context):
         """
         See `execute` method from airflow.operators.bash_operator
         """
+        start_time = time.time()
         cluster_id = self.get_cluster_id_by_name(self.cluster_name, ["WAITING", "RUNNING"])
         emr_master_instance_id = self.emr_client.list_instances(ClusterId=cluster_id, InstanceGroupTypes=["MASTER"],
                                                                 InstanceStates=["RUNNING"])["Instances"][0][
@@ -101,20 +141,25 @@ class SparkSubmitOperator(DaggerBaseOperator):
         response = self.ssm_client.send_command(
             InstanceIds=[emr_master_instance_id],
             DocumentName="AWS-RunShellScript",
-            Parameters= command_parameters
+            Parameters=command_parameters
         )
         command_id = response['Command']['CommandId']
         status = 'Pending'
         status_details = None
         while status in ['Pending', 'InProgress', 'Delayed']:
             time.sleep(30)
+            elapsed_time = time.time() - start_time
+            if self._execution_timeout and elapsed_time > self._execution_timeout:
+                application_id = self.get_application_id_by_name(emr_master_instance_id,
+                                                                 self.spark_conf_args["application_name"])
+                if application_id:
+                    self.kill_spark_job(emr_master_instance_id, application_id)
             response = self.ssm_client.get_command_invocation(CommandId=command_id, InstanceId=emr_master_instance_id)
             status = response['Status']
             status_details = response['StatusDetails']
         self.log.info(
             self.ssm_client.get_command_invocation(CommandId=command_id, InstanceId=emr_master_instance_id)[
                 'StandardErrorContent'])
-
         if status != 'Success':
             raise AirflowException(f"Spark command failed, check Spark job status in YARN resource manager. "
                                    f"Response status details: {status_details}")
