@@ -71,7 +71,6 @@ class SparkSubmitOperator(DaggerBaseOperator):
         return None
 
     def get_cluster_id_by_name(self, emr_cluster_name, cluster_states):
-
         response = self.emr_client.list_clusters(ClusterStates=cluster_states)
         matching_clusters = list(
             filter(lambda cluster: cluster['Name'] == emr_cluster_name, response['Clusters']))
@@ -87,6 +86,9 @@ class SparkSubmitOperator(DaggerBaseOperator):
 
 
     def get_application_id_by_name(self, emr_master_instance_id, application_name):
+        """
+        Get the application ID of the Spark job
+        """
         command = f"yarn application -list -appStates RUNNING | grep {application_name}"
 
         response = self.ssm_client.send_command(
@@ -149,7 +151,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
         while status in ['Pending', 'InProgress', 'Delayed']:
             time.sleep(30)
             elapsed_time = time.time() - start_time
-            if self._execution_timeout and elapsed_time > self._execution_timeout:
+            if self._execution_timeout and elapsed_time > self._execution_timeout.total_seconds():
                 application_id = self.get_application_id_by_name(emr_master_instance_id,
                                                                  self.spark_conf_args["application_name"])
                 if application_id:
