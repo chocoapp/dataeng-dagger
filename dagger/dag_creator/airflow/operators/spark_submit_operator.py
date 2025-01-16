@@ -165,7 +165,3 @@ class SparkSubmitOperator(DaggerBaseOperator):
         if status != 'Success':
             raise AirflowException(f"Spark command failed, check Spark job status in YARN resource manager. "
                                    f"Response status details: {status_details}")
-
-    def on_kill(self):
-        self.log.info("Sending SIGTERM signal to bash process group")
-        os.killpg(os.getpgid(self.sp.pid), signal.SIGTERM)
