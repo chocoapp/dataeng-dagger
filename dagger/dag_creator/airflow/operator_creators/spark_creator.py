@@ -91,6 +91,7 @@ class SparkCreator(OperatorCreator):
                 job_args=_parse_args(self._template_parameters),
                 spark_args=_parse_spark_args(self._task.spark_args),
                 spark_conf_args=_parse_spark_args(self._task.spark_conf_args, '=', 'conf '),
+                spark_app_name=self._task.spark_conf_args.get("spark.app.name", ""),
                 extra_py_files=self._task.extra_py_files,
                 **kwargs,
             )

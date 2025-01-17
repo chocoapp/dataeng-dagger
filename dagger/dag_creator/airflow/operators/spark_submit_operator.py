@@ -25,6 +25,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
             job_args=None,
             spark_args=None,
             spark_conf_args=None,
+            spark_app_name=None,
             extra_py_files=None,
             *args,
             **kwargs,
@@ -34,6 +35,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
         self.job_args = job_args
         self.spark_args = spark_args
         self.spark_conf_args = spark_conf_args
+        self.spark_app_name = spark_app_name
         self.extra_py_files = extra_py_files
         self.cluster_name = cluster_name
         self._execution_timeout = kwargs.get('execution_timeout')
@@ -177,7 +179,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
             # Handle task timeout
             self.log.error("Task timed out. Attempting to terminate the Spark job.")
             application_id = self.get_application_id_by_name(
-                emr_master_instance_id, self.spark_conf_args["application_name"]
+                emr_master_instance_id, self.spark_app_name
             )
             if application_id:
                 self.kill_spark_job(emr_master_instance_id, application_id)
