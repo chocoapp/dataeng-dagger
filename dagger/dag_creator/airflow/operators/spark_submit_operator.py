@@ -4,7 +4,7 @@ import signal
 import time
 
 import boto3
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, AirflowTaskTimeout
 from airflow.utils.decorators import apply_defaults
 
 from dagger.dag_creator.airflow.operators.dagger_base_operator import DaggerBaseOperator
