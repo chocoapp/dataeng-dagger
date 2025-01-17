@@ -125,43 +125,60 @@ class SparkSubmitOperator(DaggerBaseOperator):
         raise AirflowException(
             f"Spark job exceeded the execution timeout of {self._execution_timeout} seconds and was terminated.")
 
-
     def execute(self, context):
         """
         See `execute` method from airflow.operators.bash_operator
         """
         start_time = time.time()
-        cluster_id = self.get_cluster_id_by_name(self.cluster_name, ["WAITING", "RUNNING"])
-        emr_master_instance_id = self.emr_client.list_instances(ClusterId=cluster_id, InstanceGroupTypes=["MASTER"],
-                                                                InstanceStates=["RUNNING"])["Instances"][0][
-            "Ec2InstanceId"]
+        try:
+            # Get cluster and master node information
+            cluster_id = self.get_cluster_id_by_name(self.cluster_name, ["WAITING", "RUNNING"])
+            emr_master_instance_id = self.emr_client.list_instances(
+                ClusterId=cluster_id, InstanceGroupTypes=["MASTER"], InstanceStates=["RUNNING"]
+            )["Instances"][0]["Ec2InstanceId"]
 
-        command_parameters = {"commands": [self.spark_submit_cmd]}
-        if self._execution_timeout:
-            command_parameters["executionTimeout"] = [self.get_execution_timeout()]
+            # Build the command parameters
+            command_parameters = {"commands": [self.spark_submit_cmd]}
+            if self._execution_timeout:
+                command_parameters["executionTimeout"] = [self.get_execution_timeout()]
 
-        response = self.ssm_client.send_command(
-            InstanceIds=[emr_master_instance_id],
-            DocumentName="AWS-RunShellScript",
-            Parameters=command_parameters
-        )
-        command_id = response['Command']['CommandId']
-        status = 'Pending'
-        status_details = None
-        while status in ['Pending', 'InProgress', 'Delayed']:
-            time.sleep(30)
-            elapsed_time = time.time() - start_time
-            if self._execution_timeout and elapsed_time > self._execution_timeout.total_seconds():
-                application_id = self.get_application_id_by_name(emr_master_instance_id,
-                                                                 self.spark_conf_args["application_name"])
-                if application_id:
-                    self.kill_spark_job(emr_master_instance_id, application_id)
-            response = self.ssm_client.get_command_invocation(CommandId=command_id, InstanceId=emr_master_instance_id)
-            status = response['Status']
-            status_details = response['StatusDetails']
-        self.log.info(
-            self.ssm_client.get_command_invocation(CommandId=command_id, InstanceId=emr_master_instance_id)[
-                'StandardErrorContent'])
-        if status != 'Success':
-            raise AirflowException(f"Spark command failed, check Spark job status in YARN resource manager. "
-                                   f"Response status details: {status_details}")
+            # Send the command via SSM
+            response = self.ssm_client.send_command(
+                InstanceIds=[emr_master_instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters=command_parameters
+            )
+            command_id = response['Command']['CommandId']
+            status = 'Pending'
+            status_details = None
+
+            # Monitor the command's execution
+            while status in ['Pending', 'InProgress', 'Delayed']:
+                time.sleep(30)
+                # Check the status of the SSM command
+                response = self.ssm_client.get_command_invocation(
+                    CommandId=command_id, InstanceId=emr_master_instance_id
+                )
+                status = response['Status']
+                status_details = response['StatusDetails']
+
+            self.log.info(
+                self.ssm_client.get_command_invocation(
+                    CommandId=command_id, InstanceId=emr_master_instance_id
+                )['StandardErrorContent']
+            )
+
+            # Raise an exception if the command did not succeed
+            if status != 'Success':
+                raise AirflowException(f"Spark command failed, check Spark job status in YARN resource manager. "
+                                       f"Response status details: {status_details}")
+
+        except AirflowTaskTimeout:
+            # Handle task timeout
+            self.log.error("Task timed out. Attempting to terminate the Spark job.")
+            application_id = self.get_application_id_by_name(
+                emr_master_instance_id, self.spark_conf_args["application_name"]
+            )
+            if application_id:
+                self.kill_spark_job(emr_master_instance_id, application_id)
+            raise AirflowException("Task timed out and the Spark job was terminated.")
