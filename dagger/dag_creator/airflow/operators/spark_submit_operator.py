@@ -91,27 +91,28 @@ class SparkSubmitOperator(DaggerBaseOperator):
         """
         Get the application ID of the Spark job
         """
-        command = f"yarn application -list -appStates RUNNING | grep {application_name}"
+        if application_name:
+            command = f"yarn application -list -appStates RUNNING | grep {application_name}"
 
-        response = self.ssm_client.send_command(
-            InstanceIds=[emr_master_instance_id],
-            DocumentName="AWS-RunShellScript",
-            Parameters={"commands": [command]}
-        )
+            response = self.ssm_client.send_command(
+                InstanceIds=[emr_master_instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={"commands": [command]}
+            )
 
-        command_id = response['Command']['CommandId']
-        time.sleep(10)  # Wait for the command to execute
+            command_id = response['Command']['CommandId']
+            time.sleep(10)  # Wait for the command to execute
 
-        output = self.ssm_client.get_command_invocation(
-            CommandId=command_id,
-            InstanceId=emr_master_instance_id
-        )
+            output = self.ssm_client.get_command_invocation(
+                CommandId=command_id,
+                InstanceId=emr_master_instance_id
+            )
 
-        stdout = output['StandardOutputContent']
-        for line in stdout.split('\n'):
-            if application_name in line:
-                application_id = line.split()[0]
-                return application_id
+            stdout = output['StandardOutputContent']
+            for line in stdout.split('\n'):
+                if application_name in line:
+                    application_id = line.split()[0]
+                    return application_id
         return None
 
     def kill_spark_job(self, emr_master_instance_id, application_id):
