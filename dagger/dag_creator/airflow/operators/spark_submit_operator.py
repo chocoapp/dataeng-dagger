@@ -1,10 +1,9 @@
 import logging
 import os
-import signal
 import time
 
 import boto3
-from airflow.exceptions import AirflowException, AirflowTaskTimeout
+from airflow.exceptions import AirflowException
 from airflow.utils.decorators import apply_defaults
 
 from dagger.dag_creator.airflow.operators.dagger_base_operator import DaggerBaseOperator
@@ -39,6 +38,8 @@ class SparkSubmitOperator(DaggerBaseOperator):
         self.extra_py_files = extra_py_files
         self.cluster_name = cluster_name
         self._execution_timeout = kwargs.get('execution_timeout')
+        self._application_id = None
+        self._emr_master_instance_id = None
 
     @property
     def emr_client(self):
@@ -115,18 +116,26 @@ class SparkSubmitOperator(DaggerBaseOperator):
                     return application_id
         return None
 
-    def kill_spark_job(self, emr_master_instance_id, application_id):
-        """
-        Kill the Spark job using YARN
-        """
-        kill_command = f"yarn application -kill {application_id}"
-        self.ssm_client.send_command(
-            InstanceIds=[emr_master_instance_id],
-            DocumentName="AWS-RunShellScript",
-            Parameters={"commands": [kill_command]}
-        )
-        raise AirflowException(
-            f"Spark job exceeded the execution timeout of {self._execution_timeout} seconds and was terminated.")
+
+    def kill_spark_job(self):
+        if self._application_id and self._emr_master_instance_id:
+            kill_command = f"yarn application -kill {self._application_id}"
+            self.ssm_client.send_command(
+                InstanceIds=[self._emr_master_instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={"commands": [kill_command]},
+            )
+            logging.info(
+                f"Spark job {self._application_id} terminated successfully."
+            )
+        else:
+            logging.warning("No application ID or master instance ID found to terminate.")
+
+
+    def on_kill(self):
+        logging.info("Task killed. Attempting to terminate the Spark job.")
+        self.kill_spark_job()
+
 
     def execute(self, context):
         """
@@ -136,7 +145,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
         try:
             # Get cluster and master node information
             cluster_id = self.get_cluster_id_by_name(self.cluster_name, ["WAITING", "RUNNING"])
-            emr_master_instance_id = self.emr_client.list_instances(
+            self._emr_master_instance_id = self.emr_client.list_instances(
                 ClusterId=cluster_id, InstanceGroupTypes=["MASTER"], InstanceStates=["RUNNING"]
             )["Instances"][0]["Ec2InstanceId"]
 
@@ -147,7 +156,7 @@ class SparkSubmitOperator(DaggerBaseOperator):
 
             # Send the command via SSM
             response = self.ssm_client.send_command(
-                InstanceIds=[emr_master_instance_id],
+                InstanceIds=[self._emr_master_instance_id],
                 DocumentName="AWS-RunShellScript",
                 Parameters=command_parameters
             )
@@ -160,28 +169,24 @@ class SparkSubmitOperator(DaggerBaseOperator):
                 time.sleep(30)
                 # Check the status of the SSM command
                 response = self.ssm_client.get_command_invocation(
-                    CommandId=command_id, InstanceId=emr_master_instance_id
+                    CommandId=command_id, InstanceId=self._emr_master_instance_id
                 )
                 status = response['Status']
                 status_details = response['StatusDetails']
 
             self.log.info(
                 self.ssm_client.get_command_invocation(
-                    CommandId=command_id, InstanceId=emr_master_instance_id
+                    CommandId=command_id, InstanceId=self._emr_master_instance_id
                 )['StandardErrorContent']
             )
 
-            # Raise an exception if the command did not succeed
+            # Kill the command and raise an exception if the command did not succeed
             if status != 'Success':
+                self.kill_spark_job()
                 raise AirflowException(f"Spark command failed, check Spark job status in YARN resource manager. "
                                        f"Response status details: {status_details}")
 
-        except AirflowTaskTimeout:
-            # Handle task timeout
-            self.log.error("Task timed out. Attempting to terminate the Spark job.")
-            application_id = self.get_application_id_by_name(
-                emr_master_instance_id, self.spark_app_name
-            )
-            if application_id:
-                self.kill_spark_job(emr_master_instance_id, application_id)
-            raise AirflowException("Task timed out and the Spark job was terminated.")
+        except Exception as e:
+            logging.error(f"Error encountered: {str(e)}")
+            self.kill_spark_job()
+            raise AirflowException(f"Task failed with error: {str(e)}")
