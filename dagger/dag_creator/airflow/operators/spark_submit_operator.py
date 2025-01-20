@@ -117,12 +117,45 @@ class SparkSubmitOperator(DaggerBaseOperator):
                 CommandId=command_id, InstanceId=emr_master_instance_id
             )
 
+            self.log.info(f"ouotput: {output}")
+
             stdout = output["StandardOutputContent"]
+            self.log.info(f"stdout: {stdout}")
             for line in stdout.split("\n"):
                 if application_name in line:
                     application_id = line.split()[0]
                     return application_id
         return None
+
+    def get_application_id_by_name(self, emr_master_instance_id, application_name):
+        """
+        Get the application ID of the Spark job
+        """
+        if application_name:
+            command = f"yarn application -list -appStates RUNNING | grep {application_name}"
+
+            response = self.ssm_client.send_command(
+                InstanceIds=[emr_master_instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={"commands": [command]}
+            )
+
+            command_id = response['Command']['CommandId']
+            time.sleep(10)  # Wait for the command to execute
+
+            output = self.ssm_client.get_command_invocation(
+                CommandId=command_id,
+                InstanceId=emr_master_instance_id
+            )
+
+            stdout = output['StandardOutputContent']
+            for line in stdout.split('\n'):
+                if application_name in line:
+                    application_id = line.split()[0]
+                    return application_id
+        return None
+
+
 
     def kill_spark_job(self):
         if self._application_id and self._emr_master_instance_id:
@@ -203,6 +236,12 @@ class SparkSubmitOperator(DaggerBaseOperator):
                 )
 
         except Exception as e:
+            self._application_id = self.get_application_id_by_name(
+                self._emr_master_instance_id, self.spark_app_name
+            )
+            self.log.info(
+                f"emr:{self._emr_master_instance_id}, application_name:{self.spark_app_name}, application_id: {self._application_id}"
+            )
             logging.error(f"Error encountered: {str(e)}")
             self.kill_spark_job()
             raise AirflowException(f"Task failed with error: {str(e)}")
