@@ -156,8 +156,13 @@ class SparkSubmitOperator(DaggerBaseOperator):
         return None
 
 
-
     def kill_spark_job(self):
+        self._application_id = self.get_application_id_by_name(
+            self._emr_master_instance_id, self.spark_app_name
+        )
+        self.log.info(
+            f"emr:{self._emr_master_instance_id}, application_name:{self.spark_app_name}, application_id: {self._application_id}"
+        )
         if self._application_id and self._emr_master_instance_id:
             kill_command = f"yarn application -kill {self._application_id}"
             self.ssm_client.send_command(
