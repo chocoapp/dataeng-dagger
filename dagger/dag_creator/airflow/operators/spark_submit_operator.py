@@ -203,3 +203,4 @@ class SparkSubmitOperator(DaggerBaseOperator):
             logging.error(f"Error encountered: {str(e)}")
             self.kill_spark_job()
             raise AirflowException(f"Task failed with error: {str(e)}")
+print(1)
