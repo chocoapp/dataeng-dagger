@@ -49,6 +49,7 @@ class BatchCreator(OperatorCreator):
             job_queue=self._task.job_queue,
             container_overrides=overrides,
             awslogs_enabled=True,
+            tags=self._task.tags,
             **kwargs,
         )
         return batch_op

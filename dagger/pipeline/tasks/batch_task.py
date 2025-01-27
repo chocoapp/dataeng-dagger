@@ -57,6 +57,11 @@ class BatchTask(Task):
                     parent_fields=["task_parameters"],
                     required=False,
                 ),
+                Attribute(
+                    attribute_name="tags",
+                    parent_fields=["task_parameters"],
+                    required=False,
+                ),
             ]
         )
 
@@ -75,6 +80,7 @@ class BatchTask(Task):
         self._cluster_name = self.parse_attribute("cluster_name") or conf.BATCH_CLUSTER_NAME
         self._job_queue = self.parse_attribute("job_queue") or conf.BATCH_DEFAULT_QUEUE
         self._max_retries = self.parse_attribute("max_retries") or 4200
+        self._tags = self.parse_attribute("tags") or {}
 
     @property
     def executable(self):
@@ -115,3 +121,7 @@ class BatchTask(Task):
     @property
     def max_retries(self):
         return self._max_retries
+
+    @property
+    def tags(self):
+        return self._tags
