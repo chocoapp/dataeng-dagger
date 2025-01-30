@@ -23,6 +23,8 @@ task_parameters:
     executable: batch.py
     executable_prefix: python
     job_name: batch_job
+    tags:
+      - sample_batch
 airflow_task_parameters:
 template_parameters:
   const: 13
