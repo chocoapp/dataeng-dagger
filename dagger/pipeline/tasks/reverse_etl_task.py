@@ -116,6 +116,13 @@ class ReverseEtlTask(BatchTask):
                     comment="The number of days to keep the data in the table. If provided, the time_to_live attribute "
                             "will be set in dynamodb",
                 ),
+                Attribute(
+                    attribute_name="full_refresh",
+                    parent_fields=["task_parameters"],
+                    validator=bool,
+                    required=False,
+                    comment="If set to True, the job will perform a full refresh instead of an incremental one",
+                )
 
             ]
         )
@@ -140,6 +147,7 @@ class ReverseEtlTask(BatchTask):
         self._updated_at_column = self.parse_attribute("updated_at_column")
         self._from_time = self.parse_attribute("from_time")
         self._days_to_live = self.parse_attribute("days_to_live")
+        self._full_refresh = self.parse_attribute("full_refresh")
 
         if self._hash_column and self._updated_at_column:
             raise ValueError(f"ReverseETLTask: {self._name} hash_column and updated_at_column are mutually exclusive")
@@ -237,3 +245,7 @@ class ReverseEtlTask(BatchTask):
     @property
     def region_name(self):
         return self._region_name
+
+    @property
+    def full_refresh(self):
+        return self._full_refresh
