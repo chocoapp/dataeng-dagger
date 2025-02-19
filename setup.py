@@ -59,6 +59,6 @@ setup(
     packages=find_packages(),
     tests_require=test_requires,
     url="https://gitlab.com/goflash1/data/dagger",
-    version="0.9.0",
+    version="0.9.1",
     zip_safe=False,
 )
