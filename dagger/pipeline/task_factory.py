@@ -12,6 +12,7 @@ from dagger.pipeline.tasks import (
     reverse_etl_task,
     spark_task,
     sqoop_task,
+    soda_task
 )
 from dagger.utilities.classes import get_deep_obj_subclasses
 

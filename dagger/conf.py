@@ -110,3 +110,13 @@ reverse_etl_config = config.get('reverse_etl', None) or {}
 REVERSE_ETL_DEFAULT_JOB_NAME = reverse_etl_config.get('default_job_name', None)
 REVERSE_ETL_DEFAULT_EXECUTABLE_PREFIX = reverse_etl_config.get('default_executable_prefix', None)
 REVERSE_ETL_DEFAULT_EXECUTABLE = reverse_etl_config.get('default_executable', None)
+
+# Soda parameters
+SODA_DEFAULT_JOB_NAME = reverse_etl_config.get('default_job_name', None)
+SODA_DEFAULT_EXECUTABLE_PREFIX = reverse_etl_config.get('default_executable_prefix', None)
+SODA_DEFAULT_EXECUTABLE = reverse_etl_config.get('default_executable', None)
+SODA_DEFAULT_PROJECT_DIR = reverse_etl_config.get('default_project_dir', None)
+SODA_DEFAULT_PROFILES_DIR = reverse_etl_config.get('default_profiles_dir', None)
+SODA_DEFAULT_PROFILE_NAME = reverse_etl_config.get('default_profile_name', None)
+SODA_DEFAULT_OUTPUT_TABLE = reverse_etl_config.get('default_output_table', None)
+SODA_DEFAULT_OUTPUT_S3_PATH = reverse_etl_config.get('default_output_s3_path', None)
