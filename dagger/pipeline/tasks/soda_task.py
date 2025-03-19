@@ -24,20 +24,20 @@ class SodaTask(BatchTask):
                 Attribute(
                     attribute_name="project_dir",
                     parent_fields=["task_parameters"],
-                    required = True,
+                    required = False,
                     validator=str,
                     comment="Directory containing the dbt_project.yml file",
                 ),
                 Attribute(
                     attribute_name="profiles_dir",
                     parent_fields=["task_parameters"],
-                    required=True,
+                    required=False,
                     comment="Directory containing the profiles.yml file",
                 ),
                 Attribute(
                     attribute_name="profile_name",
                     parent_fields=["task_parameters"],
-                    required=True,
+                    required=False,
                     comment="Profile name to load from the profiles.yml file.",
                 ),
                 Attribute(
@@ -65,7 +65,7 @@ class SodaTask(BatchTask):
                     attribute_name="output_s3_path",
                     parent_fields=["task_parameters"],
                     validator=str,
-                    required=True,
+                    required=False,
                     comment="S3 location to upload the scan results",
 
                 ),
@@ -73,7 +73,7 @@ class SodaTask(BatchTask):
                     attribute_name="output_table",
                     parent_fields=["task_parameters"],
                     validator=str,
-                    required=True,
+                    required=False,
                     comment="Athena table that will contain the scan results.",
                 ),
                 Attribute(
@@ -96,8 +96,9 @@ class SodaTask(BatchTask):
         self._project_dir = self.parse_attribute("project_dir") or conf.SODA_DEFAULT_PROJECT_DIR
         self._profiles_dir = self.parse_attribute("profiles_dir") or conf.SODA_DEFAULT_PROFILES_DIR
         self._profile_name = self.parse_attribute("profile_name") or conf.SODA_DEFAULT_PROFILE_NAME
-        self._output_table = self.parse_attribute("output_path") or conf.SODA_DEFAULT_OUTPUT_TABLE
+        self._output_table = self.parse_attribute("output_table") or conf.SODA_DEFAULT_OUTPUT_TABLE
         self._output_s3_path = self.parse_attribute("output_s3_path") or conf.SODA_DEFAULT_OUTPUT_S3_PATH
+        self._target_name = self.parse_attribute("target_name")
 
         self._table_name = self.parse_attribute("table_name")
         self._model_name = self.parse_attribute("model_name")
@@ -140,4 +141,8 @@ class SodaTask(BatchTask):
     @property
     def vars(self):
         return self._vars
+
+    @property
+    def target_name(self):
+        return self._target_name
 

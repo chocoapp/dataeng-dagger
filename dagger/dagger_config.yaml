@@ -67,3 +67,13 @@ reverse_etl:
 #  default_job_name:
 #  default_executable_prefix:
 #  default_executable:
+
+soda:
+#  default_job_name:
+#  default_executable_prefix:
+#  default_executable:
+#  default_project_dir:
+#  default_profiles_dir:
+#  default_profile_name:
+#  default_output_table:
+#  default_output_s3_path:
