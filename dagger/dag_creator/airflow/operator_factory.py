@@ -13,6 +13,7 @@ from dagger.dag_creator.airflow.operator_creators import (
     reverse_etl_creator,
     spark_creator,
     sqoop_creator,
+    soda_creator,
 )
 from dagger.dag_creator.airflow.utils.operator_factories import make_control_flow
 from dagger.utilities.classes import get_deep_obj_subclasses
