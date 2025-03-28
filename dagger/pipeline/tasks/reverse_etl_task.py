@@ -122,7 +122,29 @@ class ReverseEtlTask(BatchTask):
                     validator=bool,
                     required=False,
                     comment="If set to True, the job will perform a full refresh instead of an incremental one",
+                ),
+                Attribute(
+                    attribute_name="target_case",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment="Target column case for DynamoDB. 'snake' leaves columns in snake_case; 'camel' converts to camelCase.",
+                ),
+                Attribute(
+                    attribute_name="source_case",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment="Source dataset column case. Specify the case of the incoming dataset."
+                ),
+                Attribute(
+                    attribute_name="column_mapping",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment='Optional JSON string for column mappings. Example: \'{"id": "chat_id"}\'',
                 )
+
 
             ]
         )
@@ -148,6 +170,9 @@ class ReverseEtlTask(BatchTask):
         self._from_time = self.parse_attribute("from_time")
         self._days_to_live = self.parse_attribute("days_to_live")
         self._full_refresh = self.parse_attribute("full_refresh")
+        self._target_case = self.parse_attribute("target_case")
+        self._source_case = self.parse_attribute("source_case")
+        self._column_mapping = self.parse_attribute("column_mapping")
 
         if self._hash_column and self._updated_at_column:
             raise ValueError(f"ReverseETLTask: {self._name} hash_column and updated_at_column are mutually exclusive")
@@ -249,3 +274,15 @@ class ReverseEtlTask(BatchTask):
     @property
     def full_refresh(self):
         return self._full_refresh
+
+    @property
+    def target_case(self):
+        return self._target_case
+
+    @property
+    def source_case(self):
+        return self._source_case
+
+    @property
+    def column_mapping(self):
+        return self._column_mapping

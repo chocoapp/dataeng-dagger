@@ -28,6 +28,9 @@ class ReverseEtlCreator(BatchCreator):
         self._output_type = task.output_type
         self._region_name = task.region_name
         self._full_refresh = task.full_refresh
+        self._target_case = task.target_case
+        self._source_case = task.source_case
+        self._column_mapping = task.column_mapping
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
@@ -59,6 +62,12 @@ class ReverseEtlCreator(BatchCreator):
             command.append(f"--region_name={self._region_name}")
         if self._full_refresh:
             command.append(f"--full_refresh={self._full_refresh}")
+        if self._target_case:
+            command.append(f"--target_case={self._target_case}")
+        if self._source_case:
+            command.append(f"--source_case={self._source_case}")
+        if self._column_mapping:
+            command.append(f"--column_mapping={self._column_mapping}")
 
         return command
 
