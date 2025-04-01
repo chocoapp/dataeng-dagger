@@ -18,8 +18,6 @@ class ReverseEtlCreator(BatchCreator):
         self._primary_id_column = task.primary_id_column
         self._secondary_id_column = task.secondary_id_column
         self._custom_id_column = task.custom_id_column
-        self._model_name = task.model_name
-        self._project_name = task.project_name
         self._is_deleted_column = task.is_deleted_column
         self._hash_column = task.hash_column
         self._updated_at_column = task.updated_at_column
@@ -31,6 +29,10 @@ class ReverseEtlCreator(BatchCreator):
         self._target_case = task.target_case
         self._source_case = task.source_case
         self._column_mapping = task.column_mapping
+        self._glue_registry_name = self.parse_attribute("glue_registry_name")
+        self._glue_schema_name = self.parse_attribute("glue_schema_name")
+        self._sort_key = self.parse_attribute("sort_key")
+        self._custom_columns = self.parse_attribute("custom_columns")
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
@@ -38,9 +40,8 @@ class ReverseEtlCreator(BatchCreator):
         command.append(f"--num_threads={self._num_threads}")
         command.append(f"--batch_size={self._batch_size}")
         command.append(f"--primary_id_column={self._primary_id_column}")
-        command.append(f"--model_name={self._model_name}")
-        command.append(f"--project_name={self._project_name}")
         command.append(f"--output_type={self._output_type}")
+        command.append(f"--glue_registry_name={self._glue_registry_name}")
 
         if self._assume_role_arn:
             command.append(f"--assume_role_arn={self._assume_role_arn}")
@@ -68,6 +69,13 @@ class ReverseEtlCreator(BatchCreator):
             command.append(f"--source_case={self._source_case}")
         if self._column_mapping:
             command.append(f"--column_mapping={self._column_mapping}")
+        if self._glue_schema_name:
+            command.append(f"--glue_schema_name={self._glue_schema_name}")
+        if self._sort_key:
+            command.append(f"--sort_key={self._sort_key}")
+        if self._custom_columns:
+            command.append(f"--custom_columns={json.dumps(self._custom_columns)}")
+
 
         return command
 
