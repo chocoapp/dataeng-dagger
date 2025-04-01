@@ -29,10 +29,10 @@ class ReverseEtlCreator(BatchCreator):
         self._target_case = task.target_case
         self._source_case = task.source_case
         self._column_mapping = task.column_mapping
-        self._glue_registry_name = self.parse_attribute("glue_registry_name")
-        self._glue_schema_name = self.parse_attribute("glue_schema_name")
-        self._sort_key = self.parse_attribute("sort_key")
-        self._custom_columns = self.parse_attribute("custom_columns")
+        self._glue_registry_name = task.glue_registry_name
+        self._glue_schema_name = task.glue_schema_name
+        self._sort_key = task.sort_key
+        self._custom_columns = task.custom_columns
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
