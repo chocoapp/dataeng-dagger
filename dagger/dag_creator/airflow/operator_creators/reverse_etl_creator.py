@@ -74,7 +74,7 @@ class ReverseEtlCreator(BatchCreator):
         if self._sort_key:
             command.append(f"--sort_key={self._sort_key}")
         if self._custom_columns:
-            command.append(f"--custom_columns={json.dumps(self._custom_columns)}")
+            command.append(f"--custom_columns={self._custom_columns}")
 
 
         return command
