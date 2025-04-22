@@ -156,9 +156,21 @@ class ReverseEtlTask(BatchTask):
                     validator=str,
                     required=False,
                     comment='Optional JSON string for additional custom columns from static values. Example: \'{"custom_project": "ProjectXYZ", "model_name": "ModelABC"}\''
+                ),
+                Attribute(
+                    attribute_name="columns_to_include",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment='Optional comma-separated list of columns to include in the job. Example: \'column1,column2,column3\', if not provided, all columns will be included',
+                ),
+                Attribute(
+                    attribute_name="columns_to_exclude",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment='Optional comma-separated list of columns to exclude from the job. Example: \'column1,column2,column3\', if not provided, all columns will be included',
                 )
-
-
             ]
         )
 
@@ -188,6 +200,8 @@ class ReverseEtlTask(BatchTask):
         self._glue_schema_name = self.parse_attribute("glue_schema_name")
         self._sort_key = self.parse_attribute("sort_key")
         self._custom_columns = self.parse_attribute("custom_columns")
+        self._columns_to_include = self.parse_attribute("columns_to_include")
+        self._columns_to_exclude = self.parse_attribute("columns_to_exclude")
 
         if self._hash_column and self._updated_at_column:
             raise ValueError(f"ReverseETLTask: {self._name} hash_column and updated_at_column are mutually exclusive")
@@ -309,3 +323,11 @@ class ReverseEtlTask(BatchTask):
     @property
     def custom_columns(self):
         return self._custom_columns
+
+    @property
+    def columns_to_include(self):
+        return self._columns_to_include
+
+    @property
+    def columns_to_exclude(self):
+        return self._columns_to_exclude
