@@ -206,7 +206,7 @@ class ReverseEtlTask(BatchTask):
         if self._hash_column and self._updated_at_column:
             raise ValueError(f"ReverseETLTask: {self._name} hash_column and updated_at_column are mutually exclusive")
 
-        if self._input_table_columns_to_include and not self._input_table_columns_to_exclude:
+        if self._input_table_columns_to_include and self._input_table_columns_to_exclude:
             raise ValueError(f"ReverseETLTask: {self._name} _input_table_columns_to_include and _input_table_columns_to_exclude are mutually exclusive")
 
         if self._hash_column or self._updated_at_column:
