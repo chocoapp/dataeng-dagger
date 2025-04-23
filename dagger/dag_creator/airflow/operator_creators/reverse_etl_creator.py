@@ -33,6 +33,8 @@ class ReverseEtlCreator(BatchCreator):
         self._glue_schema_name = task.glue_schema_name
         self._sort_key = task.sort_key
         self._custom_columns = task.custom_columns
+        self._input_table_columns_to_include = task.input_table_columns_to_include
+        self._input_table_columns_to_exclude = task.input_table_columns_to_exclude
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
@@ -75,7 +77,10 @@ class ReverseEtlCreator(BatchCreator):
             command.append(f"--sort_key={self._sort_key}")
         if self._custom_columns:
             command.append(f"--custom_columns={self._custom_columns}")
-
+        if self._input_table_columns_to_include:
+            command.append(f"--input_table_columns_to_include={self._input_table_columns_to_include}")
+        if self._input_table_columns_to_exclude:
+            command.append(f"--input_table_columns_to_exclude={self._input_table_columns_to_exclude}")
 
         return command
 
