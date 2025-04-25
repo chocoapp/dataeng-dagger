@@ -104,7 +104,7 @@ class ReverseEtlTask(BatchTask):
                 Attribute(
                     attribute_name="full_refresh",
                     parent_fields=["task_parameters"],
-                    validator=bool,
+                    validator=str,
                     required=False,
                     comment="If set to True, the job will perform a full refresh instead of an incremental one",
                 ),
