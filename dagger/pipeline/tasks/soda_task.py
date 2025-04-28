@@ -72,6 +72,7 @@ class SodaTask(BatchTask):
         self._output_table = self.parse_attribute("output_table") or conf.SODA_DEFAULT_OUTPUT_TABLE
         self._output_s3_path = self.parse_attribute("output_s3_path") or conf.SODA_DEFAULT_OUTPUT_S3_PATH
         self._table_name = self.parse_attribute("table_name")
+        self._is_critical_test = self.parse_attribute("is_critical_test")
         self._vars = self.parse_attribute("vars")
 
 
@@ -88,6 +89,9 @@ class SodaTask(BatchTask):
     @property
     def table_name(self):
         return self._table_name
+    @property
+    def is_critical_test(self):
+        return self._is_critical_test
 
     @property
     def vars(self):
