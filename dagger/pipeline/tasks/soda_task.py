@@ -45,6 +45,14 @@ class SodaTask(BatchTask):
                     comment="Athena table that will contain the scan results.",
                 ),
                 Attribute(
+                    attribute_name="is_critical_test",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment="True if test run is critical test. Defaults to False",
+
+                ),
+                Attribute(
                     attribute_name="vars",
                     parent_fields=["task_parameters"],
                     validator=str,

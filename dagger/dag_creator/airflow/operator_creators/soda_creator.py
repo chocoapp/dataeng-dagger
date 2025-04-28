@@ -15,6 +15,7 @@ class SodaCreator(BatchCreator):
         self._table_name = task.table_name
         self._output_s3_path = task.output_s3_path
         self._output_table = task.output_table
+        self._is_critical_test = task.is_critical_test
         self._vars = task.vars
 
     def _generate_command(self):
@@ -23,7 +24,8 @@ class SodaCreator(BatchCreator):
 
         command.append(f"--output_s3_path={self._output_s3_path}")
         command.append(f"--output_table={self._output_table}")
-
+        if self._is_critical_test:
+            command.append(f"--is_critical_test={self._is_critical_test}")
         if self._table_name:
             command.append(f"--table_name={self._table_name}")
         if self._vars:
