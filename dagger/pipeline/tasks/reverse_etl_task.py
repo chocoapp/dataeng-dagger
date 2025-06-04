@@ -170,6 +170,20 @@ class ReverseEtlTask(BatchTask):
                     validator=str,
                     required=False,
                     comment='Optional comma-separated list of columns to exclude from the job. Example: \'column1,column2,column3\', if not provided, all columns of input table will be included',
+                ),
+                Attribute(
+                    attribute_name="file_format",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment="File format for S3 output: 'json' or 'parquet' (required when output_type is 's3')",
+                ),
+                Attribute(
+                    attribute_name="file_prefix",
+                    parent_fields=["task_parameters"],
+                    validator=str,
+                    required=False,
+                    comment="File prefix for S3 output files",
                 )
             ]
         )
@@ -202,6 +216,8 @@ class ReverseEtlTask(BatchTask):
         self._custom_columns = self.parse_attribute("custom_columns")
         self._input_table_columns_to_include = self.parse_attribute("input_table_columns_to_include")
         self._input_table_columns_to_exclude = self.parse_attribute("input_table_columns_to_exclude")
+        self._file_format = self.parse_attribute("file_format")
+        self._file_prefix = self.parse_attribute("file_prefix")
 
         if self._hash_column and self._updated_at_column:
             raise ValueError(f"ReverseETLTask: {self._name} hash_column and updated_at_column are mutually exclusive")
@@ -334,3 +350,11 @@ class ReverseEtlTask(BatchTask):
     @property
     def input_table_columns_to_exclude(self):
         return self._input_table_columns_to_exclude
+
+    @property
+    def file_format(self):
+        return self._file_format
+
+    @property
+    def file_prefix(self):
+        return self._file_prefix
