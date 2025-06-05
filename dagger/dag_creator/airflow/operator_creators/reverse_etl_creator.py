@@ -40,13 +40,14 @@ class ReverseEtlCreator(BatchCreator):
 
     def _generate_command(self):
         command = BatchCreator._generate_command(self)
-
-        command.append(f"--num_threads={self._num_threads}")
-        command.append(f"--batch_size={self._batch_size}")
         command.append(f"--primary_id_column={self._primary_id_column}")
         command.append(f"--output_type={self._output_type}")
         command.append(f"--glue_registry_name={self._glue_registry_name}")
 
+        if self._num_threads:
+            command.append(f"--num_threads={self._num_threads}")
+        if self._batch_size:
+            command.append(f"--batch_size={self._batch_size}")
         if self._assume_role_arn:
             command.append(f"--assume_role_arn={self._assume_role_arn}")
         if self._secondary_id_column:
