@@ -2,3 +2,4 @@ type: s3
 name: test_s3
 bucket: test_bucket
 path: test_path
+region_name: eu_west_1
