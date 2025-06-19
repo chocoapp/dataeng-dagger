@@ -11,7 +11,6 @@ class SodaCreator(BatchCreator):
     def __init__(self, task, dag):
         super().__init__(task, dag)
 
-        self.deferrable = True
         self._absolute_job_name = task.absolute_job_name
         self._table_name = task.table_name
         self._output_s3_path = task.output_s3_path
