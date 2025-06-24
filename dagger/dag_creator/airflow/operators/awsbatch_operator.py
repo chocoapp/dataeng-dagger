@@ -104,9 +104,13 @@ class AWSBatchOperator(BatchOperator):
             # Get job logs and display them
             try:
                 # Use the log fetcher to display container logs
-                log_fetcher = self._get_batch_log_fetcher()
+                log_fetcher = self._get_batch_log_fetcher(job_id)
                 if log_fetcher:
-                    log_fetcher.get_all_logs()
+                    # Get the last 10,000 log messages (CloudWatch limit)
+                    self.log.info("Fetch the latest 100 messages from cloudwatch:")
+                    log_messages = log_fetcher.get_last_log_messages(100)
+                    for message in log_messages:
+                        self.log.info(message)
             except Exception as e:
                 self.log.warning("Could not fetch batch job logs: %s", e)
             
