@@ -46,6 +46,7 @@ class SodaCreator(BatchCreator):
             job_queue=self._task.job_queue,
             container_overrides=overrides,
             awslogs_enabled=True,
+            deferrable=True,
             **kwargs,
         )
         return batch_op
