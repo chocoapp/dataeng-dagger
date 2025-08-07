@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, TaskDeferralError
 from airflow.providers.amazon.aws.links.batch import (
     BatchJobDefinitionLink,
     BatchJobQueueLink,
@@ -133,3 +133,49 @@ class AWSBatchOperator(BatchOperator):
 
         # Call parent's execute_complete which will handle success/failure logic
         return super().execute_complete(context, event)
+
+    def _fetch_batch_logs(self):
+        """Fetch and display batch job logs for debugging failed jobs."""
+        if not self.job_id or not self.awslogs_enabled:
+            return
+
+        try:
+            # Use the log fetcher to display container logs
+            log_fetcher = self._get_batch_log_fetcher(self.job_id)
+            if log_fetcher:
+                # Get the last 50 log messages
+                self.log.info("Fetch the latest 50 messages from cloudwatch:")
+                log_messages = log_fetcher.get_last_log_messages(50)
+                for message in log_messages:
+                    self.log.info(message)
+        except Exception as e:
+            self.log.warning("Could not fetch batch job logs: %s", e)
+        
+        # Get CloudWatch log links
+        awslogs = []
+        try:
+            awslogs = self.hook.get_job_all_awslogs_info(self.job_id)
+        except AirflowException as ae:
+            self.log.warning("Cannot determine where to find the AWS logs for this Batch job: %s", ae)
+
+        if awslogs:
+            self.log.info("AWS Batch job (%s) CloudWatch Events details found. Links to logs:", self.job_id)
+            for log in awslogs:
+                self.log.info(self._format_cloudwatch_link(**log))
+
+    def execute(self, context: Context):
+        """Override execute to handle failures and fetch logs."""
+        try:
+            return super().execute(context)
+        except (TaskDeferralError, AirflowException) as e:
+            # When deferred task fails or other batch-related errors occur, fetch logs if we have a job_id
+            if self.deferrable and self.job_id and self.awslogs_enabled:
+                self.log.info("Task failed (deferrable mode), attempting to fetch batch job logs...")
+                self._fetch_batch_logs()
+            raise
+        except Exception as e:
+            # For any other unexpected exception, still try to fetch logs if we have job info
+            if self.deferrable and self.job_id and self.awslogs_enabled:
+                self.log.info("Unexpected error in deferrable batch task, attempting to fetch logs...")
+                self._fetch_batch_logs()
+            raise
