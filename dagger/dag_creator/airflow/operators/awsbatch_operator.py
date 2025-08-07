@@ -92,16 +92,13 @@ class AWSBatchOperator(BatchOperator):
 
     def execute_complete(self, context: Context, event: Optional[dict[str, Any]] = None) -> str:
         """Execute when the trigger fires - fetch logs and complete the task."""
-        # Call parent's execute_complete first
-        job_id = super().execute_complete(context, event)
-        
-        # Only fetch logs if we're in deferrable mode and awslogs are enabled
-        # In non-deferrable mode, logs are already fetched by monitor_job()
-        if self.deferrable and self.awslogs_enabled and job_id:
+        # Fetch logs before calling parent's execute_complete for both success and failure cases
+        if self.deferrable and self.awslogs_enabled and event and event.get("job_id"):
+            job_id = event["job_id"]
             # Set job_id for our log fetching methods
             self.job_id = job_id
             
-            # Get job logs and display them
+            # Get job logs and display them for both successful and failed jobs
             try:
                 # Use the log fetcher to display container logs
                 log_fetcher = self._get_batch_log_fetcher(job_id)
@@ -133,7 +130,6 @@ class AWSBatchOperator(BatchOperator):
                     aws_partition=self.hook.conn_partition,
                     **awslogs[0],
                 )
-            
-            self.log.info("AWS Batch job (%s) succeeded", self.job_id)
-        
-        return job_id
+
+        # Call parent's execute_complete which will handle success/failure logic
+        return super().execute_complete(context, event)
