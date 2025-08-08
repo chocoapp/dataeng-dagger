@@ -182,3 +182,24 @@ class AWSBatchOperator(BatchOperator):
 
         self.log.info("AWS Batch job (%s) succeeded", job_id)
         return job_id
+
+    def resume_execution(self, next_method: str, next_kwargs: Optional[dict[str, Any]], context: Context):
+        """Override resume_execution to handle trigger failures and fetch logs."""
+        self.log.info(f"AWSBatchOperator.resume_execution called with next_method='{next_method}'")
+        self.log.info(f"job_id available: {hasattr(self, 'job_id') and bool(self.job_id)}")
+        self.log.info(f"awslogs_enabled: {getattr(self, 'awslogs_enabled', False)}")
+        
+        try:
+            return super().resume_execution(next_method, next_kwargs, context)
+        except TaskDeferralError as e:
+            # When trigger fails, try to fetch logs if job_id is available
+            if hasattr(self, 'job_id') and self.job_id and self.awslogs_enabled:
+                self.log.info("Trigger failed - attempting to fetch batch job logs...")
+                last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, self.job_id)
+                # Re-raise with enhanced error message
+                raise AirflowException(
+                    _format_extra_info(f"Trigger failed for job {self.job_id}: {e}", last_logs, cloudwatch_link)
+                )
+            else:
+                self.log.warning(f"Cannot fetch logs: job_id={getattr(self, 'job_id', None)}, awslogs_enabled={getattr(self, 'awslogs_enabled', False)}")
+            raise
