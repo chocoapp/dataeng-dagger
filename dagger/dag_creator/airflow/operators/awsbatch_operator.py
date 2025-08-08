@@ -146,23 +146,27 @@ class AWSBatchOperator(BatchOperator):
 
     def execute(self, context: Context) -> Union[str, None]:
         """Submit and monitor an AWS Batch job, including early failures."""
-        try:
-            result = super().execute(context)
-            return result
-        except TaskDeferralError as e:
-            # Trigger itself failed — try to fetch logs if job_id is available
-            if self.deferrable and self.job_id:
-                last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, self.job_id)
-                raise AirflowException(
-                    _format_extra_info(f"Trigger failed for job {self.job_id}: {e}", last_logs, cloudwatch_link)
-                )
-            raise
-        except AirflowException as e:
-            # Covers immediate failures before deferral (job already FAILED)
-            if self.job_id:
-                last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, self.job_id)
-                raise AirflowException(_format_extra_info(str(e), last_logs, cloudwatch_link))
-            raise
+        # First call parent execute, which will submit the job and possibly defer
+        result = super().execute(context)
+        
+        # If we reach here without exception, the task completed (didn't defer)
+        return result
+
+    def defer(self, *, trigger, method_name: str = "execute_complete", kwargs=None, timeout=None):
+        """Override defer to store job_id in XCom before deferring."""
+        # Store job_id in XCom so it's available when the task resumes
+        if hasattr(self, 'job_id') and self.job_id:
+            # Get task instance from current context
+            from airflow.operators.python import get_current_context
+            try:
+                context = get_current_context()
+                context['task_instance'].xcom_push(key='batch_job_id', value=self.job_id)
+                self.log.info(f"Stored job_id in XCom before deferring: {self.job_id}")
+            except Exception as e:
+                self.log.warning(f"Could not store job_id in XCom: {e}")
+        
+        # Call parent defer method
+        super().defer(trigger=trigger, method_name=method_name, kwargs=kwargs, timeout=timeout)
 
     def execute_complete(self, context: Context, event: Optional[dict[str, Any]] = None) -> str:
         """Execute when the trigger fires - fetch logs first, then check job status."""
@@ -185,21 +189,29 @@ class AWSBatchOperator(BatchOperator):
 
     def resume_execution(self, next_method: str, next_kwargs: Optional[dict[str, Any]], context: Context):
         """Override resume_execution to handle trigger failures and fetch logs."""
-        self.log.info(f"AWSBatchOperator.resume_execution called with next_method='{next_method}'")
-        self.log.info(f"job_id available: {hasattr(self, 'job_id') and bool(self.job_id)}")
-        self.log.info(f"awslogs_enabled: {getattr(self, 'awslogs_enabled', False)}")
+        # Retrieve job_id from XCom if not available on the instance
+        if not hasattr(self, 'job_id') or not self.job_id:
+            task_instance = context.get('task_instance')
+            if task_instance:
+                try:
+                    stored_job_id = task_instance.xcom_pull(task_ids=task_instance.task_id, key='batch_job_id')
+                    if stored_job_id:
+                        self.job_id = stored_job_id
+                        self.log.info(f"Retrieved job_id from XCom: {stored_job_id}")
+                except Exception as e:
+                    self.log.debug(f"Could not retrieve job_id from XCom: {e}")
         
         try:
             return super().resume_execution(next_method, next_kwargs, context)
         except TaskDeferralError as e:
             # When trigger fails, try to fetch logs if job_id is available
             if hasattr(self, 'job_id') and self.job_id and self.awslogs_enabled:
-                self.log.info("Trigger failed - attempting to fetch batch job logs...")
+                self.log.info("Batch job trigger failed - fetching CloudWatch logs...")
                 last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, self.job_id)
-                # Re-raise with enhanced error message
+                # Re-raise with enhanced error message including logs
                 raise AirflowException(
-                    _format_extra_info(f"Trigger failed for job {self.job_id}: {e}", last_logs, cloudwatch_link)
+                    _format_extra_info(f"Batch job {self.job_id} failed: {e}", last_logs, cloudwatch_link)
                 )
             else:
-                self.log.warning(f"Cannot fetch logs: job_id={getattr(self, 'job_id', None)}, awslogs_enabled={getattr(self, 'awslogs_enabled', False)}")
+                self.log.warning("Cannot fetch logs for failed batch job - job_id or awslogs_enabled not available")
             raise
