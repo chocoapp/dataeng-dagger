@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from airflow.exceptions import AirflowException, TaskDeferralError
 from airflow.providers.amazon.aws.links.batch import (
@@ -102,55 +102,36 @@ class AWSBatchOperator(BatchOperator):
         self.hook.check_job_success(self.job_id)
         self.log.info("AWS Batch job (%s) succeeded", self.job_id)
 
-    def _fetch_and_log_cloudwatch(self, context: Context, job_id: str) -> tuple[list[str], Optional[str]]:
-        """
-        Fetch CloudWatch logs for the given job_id, log them to Airflow,
-        and return (last_logs, cloudwatch_link).
-        """
+    def _fetch_and_log_cloudwatch(self, job_id: str) -> tuple[list[str], Optional[str]]:
+        """Fetch CloudWatch logs for the given job_id and return (last_logs, cloudwatch_link)."""
         last_logs: list[str] = []
         cloudwatch_link: Optional[str] = None
 
-        if self.awslogs_enabled:
-            # Fetch last 50 log messages
-            try:
-                log_fetcher = self._get_batch_log_fetcher(job_id)
-                if log_fetcher:
-                    self.log.info("Fetching the latest 50 messages from CloudWatch:")
-                    last_logs = log_fetcher.get_last_log_messages(50)
+        if not self.awslogs_enabled:
+            return last_logs, cloudwatch_link
+
+        # Fetch last log messages
+        try:
+            log_fetcher = self._get_batch_log_fetcher(job_id)
+            if log_fetcher:
+                last_logs = log_fetcher.get_last_log_messages(50)
+                if last_logs:
+                    self.log.info("CloudWatch logs (last 50 messages):")
                     for message in last_logs:
                         self.log.info(message)
-            except Exception as e:
-                self.log.warning("Could not fetch batch job logs: %s", e)
+        except Exception as e:
+            self.log.warning("Could not fetch batch job logs: %s", e)
 
-            # Fetch CloudWatch log link
-            try:
-                awslogs = self.hook.get_job_all_awslogs_info(job_id)
-            except AirflowException as ae:
-                self.log.warning("Cannot determine where to find the AWS logs: %s", ae)
-                awslogs = []
-            else:
-                if awslogs:
-                    cloudwatch_link = self._format_cloudwatch_link(**awslogs[0])
-                    self.log.info("AWS Batch job (%s) CloudWatch Events details found:", job_id)
-                    for log in awslogs:
-                        self.log.info(self._format_cloudwatch_link(**log))
-                    CloudWatchEventsLink.persist(
-                        context=context,
-                        operator=self,
-                        region_name=self.hook.conn_region_name,
-                        aws_partition=self.hook.conn_partition,
-                        **awslogs[0],
-                    )
+        # Get CloudWatch log link
+        try:
+            awslogs = self.hook.get_job_all_awslogs_info(job_id)
+            if awslogs:
+                cloudwatch_link = self._format_cloudwatch_link(**awslogs[0])
+                self.log.info("CloudWatch link: %s", cloudwatch_link)
+        except AirflowException as e:
+            self.log.warning("Cannot determine CloudWatch log link: %s", e)
 
         return last_logs, cloudwatch_link
-
-    def execute(self, context: Context) -> Union[str, None]:
-        """Submit and monitor an AWS Batch job, including early failures."""
-        # First call parent execute, which will submit the job and possibly defer
-        result = super().execute(context)
-        
-        # If we reach here without exception, the task completed (didn't defer)
-        return result
 
     def execute_complete(self, context: Context, event: Optional[dict[str, Any]] = None) -> str:
         """Execute when the trigger fires - fetch logs first, then check job status."""
@@ -161,7 +142,7 @@ class AWSBatchOperator(BatchOperator):
         self.job_id = job_id
 
         # Always fetch logs before checking status
-        last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, job_id)
+        last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(job_id)
 
         try:
             self.hook.check_job_success(job_id)
@@ -191,7 +172,7 @@ class AWSBatchOperator(BatchOperator):
             # When trigger fails, try to fetch logs if job_id is available
             if hasattr(self, 'job_id') and self.job_id and self.awslogs_enabled:
                 self.log.info("Batch job trigger failed - fetching CloudWatch logs...")
-                last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(context, self.job_id)
+                last_logs, cloudwatch_link = self._fetch_and_log_cloudwatch(self.job_id)
                 # Re-raise with enhanced error message including logs
                 raise AirflowException(
                     _format_extra_info(f"Batch job {self.job_id} failed: {e}", last_logs, cloudwatch_link)
