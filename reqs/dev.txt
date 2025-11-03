@@ -1,5 +1,5 @@
 pip==24.0
-apache-airflow[amazon,postgres,s3,statsd]==2.9.0 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.0/constraints-3.12.txt"
+apache-airflow[amazon,postgres,s3,statsd]==2.11.0 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.11.0/constraints-3.12.txt"
 black==22.10.0
 bumpversion==0.6.0
 coverage==7.4.4
