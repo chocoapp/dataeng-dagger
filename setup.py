@@ -45,7 +45,7 @@ setup(
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.12",
     ],
     description="Config Driven ETL",
     entry_points={"console_scripts": ["dagger=dagger.main:cli"]},
