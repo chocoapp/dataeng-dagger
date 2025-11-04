@@ -1,4 +1,4 @@
-apache-airflow[amazon,postgres,s3,statsd]==2.9.0
+apache-airflow[amazon,postgres,s3,statsd]==2.11.0 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.11.0/constraints-3.12.txt"
 pytest-cov==4.0.0
 pytest==7.2.0
 graphviz
