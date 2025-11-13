@@ -27,7 +27,7 @@ class Module:
                 f"{path.join(self._directory, task)}.yaml"
             )
 
-        self._branches_to_generate = config["branches_to_generate"]
+        self._branches_to_generate = config.get("branches_to_generate", {})
         self._override_parameters = config.get("override_parameters", {})
         self._default_parameters = config.get("default_parameters", {})
         self._jinja_parameters = jinja_parameters or {}
@@ -96,13 +96,17 @@ class Module:
             )
 
     def generate_task_configs(self):
+        if not self._branches_to_generate:
+            _logger.warning("No branches to generate found in config")
+            return
+
         for branch_name, attrs in self._branches_to_generate.items():
             attrs = {} if attrs is None else attrs
             _logger.info(f"Generating tasks for branch {branch_name}")
             template_parameters = {}
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
-            template_parameters['branch_name'] = branch_name
+            template_parameters["branch_name"] = branch_name
             template_parameters.update(self._jinja_parameters)
 
             for task, task_yaml in self._tasks.items():
