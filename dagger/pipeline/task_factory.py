@@ -3,6 +3,7 @@ from dagger.pipeline.tasks import (
     airflow_op_task,
     athena_transform_task,
     batch_task,
+    databricks_dlt_task,
     dbt_task,
     dummy_task,
     python_task,
@@ -12,7 +13,7 @@ from dagger.pipeline.tasks import (
     reverse_etl_task,
     spark_task,
     sqoop_task,
-    soda_task
+    soda_task,
 )
 from dagger.utilities.classes import get_deep_obj_subclasses
 

@@ -296,7 +296,20 @@ class AthenaDBTConfigParser(DBTConfigParser):
 
 
 class DatabricksDBTConfigParser(DBTConfigParser):
-    """Implementation for Databricks configurations."""
+    """DBT config parser implementation for Databricks Unity Catalog.
+
+    Parses dbt manifest.json files for projects using the databricks-dbt adapter
+    and generates Dagger task configurations. Handles both Unity Catalog sources
+    (accessed via Databricks) and legacy Hive metastore sources (accessed via Athena).
+
+    Attributes:
+        LEGACY_HIVE_DATABASES: Set of database names that indicate legacy Hive
+            metastore tables accessed via Athena rather than Unity Catalog.
+    """
+
+    # Schemas that indicate sources are in legacy Hive metastore (accessed via Athena)
+    # rather than Unity Catalog (accessed via Databricks)
+    LEGACY_HIVE_DATABASES: set[str] = {"hive_metastore"}
 
     def __init__(self, default_config_parameters: dict):
         super().__init__(default_config_parameters)
@@ -306,17 +319,132 @@ class DatabricksDBTConfigParser(DBTConfigParser):
             "create_external_athena_table", False
         )
 
-    def _is_node_preparation_model(self, node: dict):
+    def _is_databricks_source(self, node: dict) -> bool:
+        """Check if a source is a Unity Catalog table (accessed via Databricks).
+
+        Sources with database 'hive_metastore' are legacy tables accessed via Athena.
+        Sources with other databases (e.g., Unity Catalog like ${ENV_MARTS}) are
+        Databricks tables that should create databricks input tasks.
+
+        Args:
+            node: The source node from dbt manifest
+
+        Returns:
+            True if the source is a Unity Catalog table, False otherwise
         """
-        Define whether it is a preparation model.
+        database = node.get("database", "")
+        return database not in self.LEGACY_HIVE_DATABASES
+
+    def _is_node_preparation_model(self, node: dict) -> bool:
+        """Determine whether a node is a preparation model.
+
+        Preparation models are intermediate models in the transformation pipeline
+        that should not create external dependencies.
+
+        Args:
+            node: The dbt node from manifest.json.
+
+        Returns:
+            True if the node's schema contains 'preparation', False otherwise.
         """
         return "preparation" in node.get("schema", "")
+
+    def _get_databricks_source_task(
+        self, node: dict, follow_external_dependency: bool = False
+    ) -> dict:
+        """Generate a databricks input task for a Unity Catalog source.
+
+        This is used for sources that point to Unity Catalog tables (e.g., DLT outputs)
+        rather than legacy Hive metastore tables.
+
+        Args:
+            node: The source node from dbt manifest
+            follow_external_dependency: Whether to create an ExternalTaskSensor
+
+        Returns:
+            Dagger databricks task configuration dict
+        """
+        task = DATABRICKS_TASK_BASE.copy()
+        if follow_external_dependency:
+            task["follow_external_dependency"] = True
+
+        task["catalog"] = node.get("database", self._default_catalog)
+        task["schema"] = node.get("schema", self._default_schema)
+        task["table"] = node.get("name", "")
+        task["name"] = f"{task['catalog']}__{task['schema']}__{task['table']}_databricks"
+
+        return task
+
+    def _generate_dagger_tasks(self, node_name: str) -> List[Dict]:
+        """Generate dagger tasks, with special handling for Databricks Unity Catalog sources.
+
+        Overrides the base class method to handle sources that are in Unity Catalog
+        (e.g., DLT output tables) by creating databricks input tasks instead of athena tasks.
+
+        Args:
+            node_name: The name of the DBT model node
+
+        Returns:
+            List[Dict]: The respective dagger tasks for the DBT model node
+        """
+        dagger_tasks = []
+
+        if node_name.startswith("source"):
+            node = self._sources_in_manifest[node_name]
+        else:
+            node = self._nodes_in_manifest[node_name]
+
+        resource_type = node.get("resource_type")
+        materialized_type = node.get("config", {}).get("materialized")
+
+        follow_external_dependency = True
+        if resource_type == "seed" or (self._is_node_preparation_model(node) and materialized_type != "table"):
+            follow_external_dependency = False
+
+        if resource_type == "source":
+            # Check if this source is a Unity Catalog table (e.g., DLT outputs)
+            if self._is_databricks_source(node):
+                table_task = self._get_databricks_source_task(
+                    node, follow_external_dependency=follow_external_dependency
+                )
+            else:
+                # Legacy Hive metastore sources use Athena
+                table_task = self._get_athena_table_task(
+                    node, follow_external_dependency=follow_external_dependency
+                )
+            dagger_tasks.append(table_task)
+
+        elif materialized_type == "ephemeral":
+            task = self._get_dummy_task(node)
+            dagger_tasks.append(task)
+            for dependent_node_name in node.get("depends_on", {}).get("nodes", []):
+                dagger_tasks += self._generate_dagger_tasks(dependent_node_name)
+
+        else:
+            table_task = self._get_table_task(node, follow_external_dependency=follow_external_dependency)
+            dagger_tasks.append(table_task)
+
+            if materialized_type in ("table", "incremental"):
+                dagger_tasks.append(self._get_s3_task(node))
+            elif self._is_node_preparation_model(node):
+                for dependent_node_name in node.get("depends_on", {}).get("nodes", []):
+                    dagger_tasks.extend(
+                        self._generate_dagger_tasks(dependent_node_name)
+                    )
+
+        return dagger_tasks
 
     def _get_table_task(
         self, node: dict, follow_external_dependency: bool = False
     ) -> dict:
-        """
-        Generates the dagger databricks task for the DBT model node
+        """Generate a Databricks table task for a dbt model node.
+
+        Args:
+            node: The dbt model node from manifest.json.
+            follow_external_dependency: Whether to create an ExternalTaskSensor.
+
+        Returns:
+            Dagger databricks task configuration dict.
         """
         task = DATABRICKS_TASK_BASE.copy()
         if follow_external_dependency:
@@ -334,8 +462,15 @@ class DatabricksDBTConfigParser(DBTConfigParser):
     def _get_model_data_location(
         self, node: dict, schema: str, model_name: str
     ) -> Tuple[str, str]:
-        """
-        Gets the S3 path of the dbt model relative to the data bucket.
+        """Get the S3 path of a dbt model relative to the data bucket.
+
+        Args:
+            node: The dbt model node from manifest.json.
+            schema: The schema name (unused for Databricks, kept for interface compatibility).
+            model_name: The model name.
+
+        Returns:
+            Tuple of (bucket_name, data_path).
         """
         location_root = node.get("config", {}).get("location_root")
         location = join(location_root, model_name)
@@ -345,32 +480,39 @@ class DatabricksDBTConfigParser(DBTConfigParser):
         return bucket_name, data_path
 
     def _get_s3_task(self, node: dict, is_output: bool = False) -> dict:
-        """
-        Generates the dagger s3 task for the databricks-dbt model node
+        """Generate an S3 task for a databricks-dbt model node.
+
+        Args:
+            node: The dbt model node from manifest.json.
+            is_output: If True, names the task 'output_s3_path' for output declarations.
+
+        Returns:
+            Dagger S3 task configuration dict.
         """
         task = S3_TASK_BASE.copy()
 
         schema = node.get("schema", self._default_schema)
         table = node.get("name", "")
-        task["name"] = f"output_s3_path" if is_output else f"s3_{table}"
+        task["name"] = "output_s3_path" if is_output else f"s3_{table}"
         task["bucket"], task["path"] = self._get_model_data_location(
             node, schema, table
         )
 
         return task
 
-    def _generate_dagger_output(self, node: dict):
-        """
-        Generates the dagger output for the DBT model node with the databricks-dbt adapter.
-        If the model is materialized as a view or ephemeral, then a dummy task is created.
-        Otherwise, and databricks and s3 task is created for the DBT model node.
-        And if create_external_athena_table is True te an extra athena task is created.
+    def _generate_dagger_output(self, node: dict) -> List[Dict]:
+        """Generate dagger output tasks for a databricks-dbt model node.
+
+        Creates output task configurations based on the model's materialization type:
+        - Ephemeral models produce a dummy task
+        - Table/incremental models produce databricks + S3 tasks
+        - Optionally adds an Athena task if create_external_athena_table is True
+
         Args:
-            node: The extracted node from the manifest.json file
+            node: The dbt model node from manifest.json.
 
         Returns:
-            dict: The dagger output, which is a combination of an athena and s3 task for the DBT model node
-
+            List of dagger output task configuration dicts.
         """
         materialized_type = node.get("config", {}).get("materialized")
         if materialized_type == "ephemeral":

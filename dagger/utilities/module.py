@@ -51,7 +51,9 @@ class Module:
         return content
 
     @staticmethod
-    def load_plugins_to_jinja_environment(environment: jinja2.Environment) -> jinja2.Environment:
+    def load_plugins_to_jinja_environment(
+        environment: jinja2.Environment,
+    ) -> jinja2.Environment:
         """
         Dynamically load all classes(plugins) from the folders defined in the conf.PLUGIN_DIRS variable.
         The folder contains all plugins that are part of the project.
@@ -60,12 +62,20 @@ class Module:
         """
         for plugin_path in conf.PLUGIN_DIRS:
             for root, dirs, files in os.walk(plugin_path):
-                dirs[:] = [directory for directory in dirs if not directory.lower().startswith("test")]
+                dirs[:] = [
+                    directory
+                    for directory in dirs
+                    if not directory.lower().startswith("test")
+                ]
                 for plugin_file in files:
-                    if plugin_file.endswith(".py") and not (plugin_file.startswith("__") or plugin_file.startswith("test")):
+                    if plugin_file.endswith(".py") and not (
+                        plugin_file.startswith("__") or plugin_file.startswith("test")
+                    ):
                         module_name = plugin_file.replace(".py", "")
                         module_path = os.path.join(root, plugin_file)
-                        spec = importlib.util.spec_from_file_location(module_name, module_path)
+                        spec = importlib.util.spec_from_file_location(
+                            module_name, module_path
+                        )
                         module = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(module)
 
@@ -84,8 +94,7 @@ class Module:
         return (
             rendered_task
             # TODO Remove this hack and use Jinja escaping instead of special expression in template files
-            .replace("__CBS__", "{")
-            .replace("__CBE__", "}")
+            .replace("__CBS__", "{").replace("__CBE__", "}")
         )
 
     @staticmethod
@@ -102,7 +111,7 @@ class Module:
             template_parameters = {}
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
-            template_parameters['branch_name'] = branch_name
+            template_parameters["branch_name"] = branch_name
             template_parameters.update(self._jinja_parameters)
 
             for task, task_yaml in self._tasks.items():
