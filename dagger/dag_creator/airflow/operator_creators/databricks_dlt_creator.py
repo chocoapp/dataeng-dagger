@@ -34,8 +34,8 @@ def _cancel_databricks_run(context: dict[str, Any]) -> None:
         _logger.warning(f"No run_id found in XCom for task {ti.task_id}")
         return
 
-    # Get the databricks_conn_id from the operator
-    databricks_conn_id = getattr(ti.task, "databricks_conn_id", "databricks_default")
+    # Get the databricks_conn_id from the operator (set during operator creation)
+    databricks_conn_id = ti.task.databricks_conn_id
 
     try:
         hook = DatabricksHook(databricks_conn_id=databricks_conn_id)
@@ -88,14 +88,12 @@ class DatabricksDLTCreator(OperatorCreator):
             DatabricksRunNowOperator,
         )
 
-        # Get task parameters
+        # Get task parameters - defaults are handled in DatabricksDLTTask
         job_name: str = self._task.job_name
-        databricks_conn_id: str = getattr(
-            self._task, "databricks_conn_id", "databricks_default"
-        )
-        wait_for_completion: bool = getattr(self._task, "wait_for_completion", True)
-        poll_interval_seconds: int = getattr(self._task, "poll_interval_seconds", 30)
-        timeout_seconds: int = getattr(self._task, "timeout_seconds", 3600)
+        databricks_conn_id: str = self._task.databricks_conn_id
+        wait_for_completion: bool = self._task.wait_for_completion
+        poll_interval_seconds: int = self._task.poll_interval_seconds
+        timeout_seconds: int = self._task.timeout_seconds
 
         # DatabricksRunNowOperator triggers an existing Databricks Job by name
         # The job must have a pipeline_task that references the DLT pipeline
