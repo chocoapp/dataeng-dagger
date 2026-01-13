@@ -80,3 +80,19 @@ dagger print-graph    # Visualize dependency graph
 - **Factory Pattern**: TaskFactory/IOFactory auto-discover types via reflection
 - **Strategy Pattern**: OperatorCreator subclasses handle task-specific operator creation
 - **Dataset Aliasing**: IO `alias()` method enables automatic dependency detection across pipelines
+
+## Coding Standards
+
+### Avoid getattr
+Do not use `getattr` for accessing task or IO properties. Instead, define explicit properties on the class. This ensures:
+- Type safety and IDE autocompletion
+- Clear interface contracts
+- Easier debugging and testing
+
+```python
+# Bad - avoid this pattern
+value = getattr(self._task, 'some_property', default)
+
+# Good - use explicit properties
+value = self._task.some_property  # Property defined on task class
+```
