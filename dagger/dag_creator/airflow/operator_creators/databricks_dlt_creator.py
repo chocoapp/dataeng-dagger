@@ -21,8 +21,6 @@ def _cancel_databricks_run(context: dict[str, Any]) -> None:
     Args:
         context: Airflow context dictionary containing task instance and other metadata.
     """
-    from airflow.providers.databricks.hooks.databricks import DatabricksHook
-
     ti = context.get("task_instance")
     if not ti:
         _logger.warning("No task instance in context, cannot cancel Databricks run")
@@ -37,10 +35,18 @@ def _cancel_databricks_run(context: dict[str, Any]) -> None:
     # Get the databricks_conn_id from the operator (set during operator creation)
     databricks_conn_id = ti.task.databricks_conn_id
 
+    # Import here to avoid import errors if databricks provider not installed
+    # and to only import when actually needed (after early returns)
     try:
+        from airflow.providers.databricks.hooks.databricks import DatabricksHook
+
         hook = DatabricksHook(databricks_conn_id=databricks_conn_id)
         hook.cancel_run(run_id)
         _logger.info(f"Cancelled Databricks run {run_id} for task {ti.task_id}")
+    except ImportError:
+        _logger.error(
+            "airflow-providers-databricks is not installed, cannot cancel run"
+        )
     except Exception as e:
         _logger.error(f"Failed to cancel Databricks run {run_id}: {e}")
 
@@ -80,6 +86,9 @@ class DatabricksDLTCreator(OperatorCreator):
 
         Returns:
             A configured DatabricksRunNowOperator instance.
+
+        Raises:
+            ValueError: If job_name is empty or not provided.
         """
         # Import here to avoid import errors if databricks provider not installed
         from datetime import timedelta
@@ -90,6 +99,10 @@ class DatabricksDLTCreator(OperatorCreator):
 
         # Get task parameters - defaults are handled in DatabricksDLTTask
         job_name: str = self._task.job_name
+        if not job_name:
+            raise ValueError(
+                f"job_name is required for DatabricksDLTTask '{self._task.name}'"
+            )
         databricks_conn_id: str = self._task.databricks_conn_id
         wait_for_completion: bool = self._task.wait_for_completion
         poll_interval_seconds: int = self._task.poll_interval_seconds
