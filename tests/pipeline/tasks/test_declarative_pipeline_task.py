@@ -1,20 +1,20 @@
-"""Unit tests for DatabricksDLTTask."""
+"""Unit tests for DeclarativePipelineTask."""
 
 import unittest
 from unittest.mock import MagicMock
 
 import yaml
 
-from dagger.pipeline.tasks.databricks_dlt_task import DatabricksDLTTask
+from dagger.pipeline.tasks.declarative_pipeline_task import DeclarativePipelineTask
 
 
-class TestDatabricksDLTTask(unittest.TestCase):
-    """Test cases for DatabricksDLTTask."""
+class TestDeclarativePipelineTask(unittest.TestCase):
+    """Test cases for DeclarativePipelineTask."""
 
     def setUp(self) -> None:
         """Set up test fixtures."""
         with open(
-            "tests/fixtures/pipeline/tasks/databricks_dlt_task.yaml", "r"
+            "tests/fixtures/pipeline/tasks/declarative_pipeline_task.yaml", "r"
         ) as stream:
             self.config = yaml.safe_load(stream)
 
@@ -22,7 +22,7 @@ class TestDatabricksDLTTask(unittest.TestCase):
         self.mock_pipeline = MagicMock()
         self.mock_pipeline.directory = "tests/fixtures/pipeline/tasks"
 
-        self.task = DatabricksDLTTask(
+        self.task = DeclarativePipelineTask(
             name="test_dlt_task",
             pipeline_name="test_pipeline",
             pipeline=self.mock_pipeline,
@@ -31,7 +31,7 @@ class TestDatabricksDLTTask(unittest.TestCase):
 
     def test_ref_name(self) -> None:
         """Test that ref_name is correctly set."""
-        self.assertEqual(DatabricksDLTTask.ref_name, "databricks_dlt")
+        self.assertEqual(DeclarativePipelineTask.ref_name, "declarative_pipeline")
 
     def test_job_name(self) -> None:
         """Test job_name property."""
@@ -66,13 +66,13 @@ class TestDatabricksDLTTask(unittest.TestCase):
         self.assertEqual(self.task.pipeline_name, "test_pipeline")
 
 
-class TestDatabricksDLTTaskDefaults(unittest.TestCase):
-    """Test cases for DatabricksDLTTask default values."""
+class TestDeclarativePipelineTaskDefaults(unittest.TestCase):
+    """Test cases for DeclarativePipelineTask default values."""
 
     def setUp(self) -> None:
         """Set up test fixtures with minimal config."""
         self.config = {
-            "type": "databricks_dlt",
+            "type": "declarative_pipeline",
             "description": "Test DLT task with defaults",
             "inputs": [],
             "outputs": [],
@@ -86,7 +86,7 @@ class TestDatabricksDLTTaskDefaults(unittest.TestCase):
         self.mock_pipeline = MagicMock()
         self.mock_pipeline.directory = "tests/fixtures/pipeline/tasks"
 
-        self.task = DatabricksDLTTask(
+        self.task = DeclarativePipelineTask(
             name="minimal_dlt_task",
             pipeline_name="test_pipeline",
             pipeline=self.mock_pipeline,
@@ -114,13 +114,13 @@ class TestDatabricksDLTTaskDefaults(unittest.TestCase):
         self.assertTrue(self.task.cancel_on_kill)
 
 
-class TestDatabricksDLTTaskBooleanHandling(unittest.TestCase):
+class TestDeclarativePipelineTaskBooleanHandling(unittest.TestCase):
     """Test cases for boolean parameter handling edge cases."""
 
     def test_wait_for_completion_false(self) -> None:
         """Test that wait_for_completion=false is correctly handled."""
         config = {
-            "type": "databricks_dlt",
+            "type": "declarative_pipeline",
             "description": "Test",
             "inputs": [],
             "outputs": [],
@@ -135,7 +135,7 @@ class TestDatabricksDLTTaskBooleanHandling(unittest.TestCase):
         mock_pipeline = MagicMock()
         mock_pipeline.directory = "tests/fixtures/pipeline/tasks"
 
-        task = DatabricksDLTTask(
+        task = DeclarativePipelineTask(
             name="test_task",
             pipeline_name="test_pipeline",
             pipeline=mock_pipeline,
@@ -147,7 +147,7 @@ class TestDatabricksDLTTaskBooleanHandling(unittest.TestCase):
     def test_cancel_on_kill_false(self) -> None:
         """Test that cancel_on_kill=false is correctly handled."""
         config = {
-            "type": "databricks_dlt",
+            "type": "declarative_pipeline",
             "description": "Test",
             "inputs": [],
             "outputs": [],
@@ -162,7 +162,7 @@ class TestDatabricksDLTTaskBooleanHandling(unittest.TestCase):
         mock_pipeline = MagicMock()
         mock_pipeline.directory = "tests/fixtures/pipeline/tasks"
 
-        task = DatabricksDLTTask(
+        task = DeclarativePipelineTask(
             name="test_task",
             pipeline_name="test_pipeline",
             pipeline=mock_pipeline,
