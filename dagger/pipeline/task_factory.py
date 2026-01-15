@@ -3,7 +3,7 @@ from dagger.pipeline.tasks import (
     airflow_op_task,
     athena_transform_task,
     batch_task,
-    databricks_dlt_task,
+    declarative_pipeline_task,
     dbt_task,
     dummy_task,
     python_task,

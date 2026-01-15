@@ -1,4 +1,4 @@
-type: databricks_dlt
+type: declarative_pipeline
 description: Test DLT pipeline task
 inputs:
   - type: athena

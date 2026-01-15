@@ -1,4 +1,4 @@
-"""Operator creator for Databricks DLT (Delta Live Tables) pipelines."""
+"""Operator creator for declarative pipelines (DLT/Delta Live Tables)."""
 
 import logging
 from typing import Any
@@ -6,7 +6,7 @@ from typing import Any
 from airflow.models import BaseOperator, DAG
 
 from dagger.dag_creator.airflow.operator_creator import OperatorCreator
-from dagger.pipeline.tasks.databricks_dlt_task import DatabricksDLTTask
+from dagger.pipeline.tasks.declarative_pipeline_task import DeclarativePipelineTask
 
 _logger = logging.getLogger(__name__)
 
@@ -51,8 +51,8 @@ def _cancel_databricks_run(context: dict[str, Any]) -> None:
         _logger.error(f"Failed to cancel Databricks run {run_id}: {e}")
 
 
-class DatabricksDLTCreator(OperatorCreator):
-    """Creates operators for triggering Databricks DLT pipelines via Jobs.
+class DeclarativePipelineCreator(OperatorCreator):
+    """Creates operators for triggering declarative pipelines via Databricks Jobs.
 
     This creator uses DatabricksRunNowOperator to trigger a Databricks Job
     that wraps the DLT pipeline. The job is identified by name and must be
@@ -60,22 +60,22 @@ class DatabricksDLTCreator(OperatorCreator):
 
     Attributes:
         ref_name: Reference name used by OperatorFactory to match this creator
-            with DatabricksDLTTask instances.
+            with DeclarativePipelineTask instances.
     """
 
-    ref_name: str = "databricks_dlt"
+    ref_name: str = "declarative_pipeline"
 
-    def __init__(self, task: DatabricksDLTTask, dag: DAG) -> None:
-        """Initialize the DatabricksDLTCreator.
+    def __init__(self, task: DeclarativePipelineTask, dag: DAG) -> None:
+        """Initialize the DeclarativePipelineCreator.
 
         Args:
-            task: The DatabricksDLTTask containing pipeline configuration.
+            task: The DeclarativePipelineTask containing pipeline configuration.
             dag: The Airflow DAG this operator will belong to.
         """
         super().__init__(task, dag)
 
     def _create_operator(self, **kwargs: Any) -> BaseOperator:
-        """Create a DatabricksRunNowOperator for the DLT pipeline.
+        """Create a DatabricksRunNowOperator for the declarative pipeline.
 
         Creates an Airflow operator that triggers an existing Databricks Job
         by name. The job must have a pipeline_task that references the DLT
@@ -97,11 +97,11 @@ class DatabricksDLTCreator(OperatorCreator):
             DatabricksRunNowOperator,
         )
 
-        # Get task parameters - defaults are handled in DatabricksDLTTask
+        # Get task parameters - defaults are handled in DeclarativePipelineTask
         job_name: str = self._task.job_name
         if not job_name:
             raise ValueError(
-                f"job_name is required for DatabricksDLTTask '{self._task.name}'"
+                f"job_name is required for DeclarativePipelineTask '{self._task.name}'"
             )
         databricks_conn_id: str = self._task.databricks_conn_id
         wait_for_completion: bool = self._task.wait_for_completion

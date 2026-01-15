@@ -1,4 +1,4 @@
-"""Task configuration for Databricks DLT (Delta Live Tables) pipelines."""
+"""Task configuration for declarative pipelines (DLT/Delta Live Tables)."""
 
 from typing import Any, Optional
 
@@ -6,8 +6,8 @@ from dagger.pipeline.task import Task
 from dagger.utilities.config_validator import Attribute
 
 
-class DatabricksDLTTask(Task):
-    """Task configuration for triggering Databricks DLT pipelines via Jobs.
+class DeclarativePipelineTask(Task):
+    """Task configuration for triggering declarative pipelines via Databricks Jobs.
 
     This task type uses DatabricksRunNowOperator to trigger a Databricks Job
     that wraps the DLT pipeline. The job is identified by name and must be
@@ -23,27 +23,31 @@ class DatabricksDLTTask(Task):
         cancel_on_kill: Whether to cancel Databricks job if Airflow task is killed.
 
     Example YAML configuration:
-        type: databricks_dlt
+        type: declarative_pipeline
         description: Run DLT pipeline users
         inputs:
-          - type: athena
-            schema: ddb_changelogs
-            table: order_preference
-            follow_external_dependency: true
+          - type: s3
+            name: input_order_service_public_users
+            bucket: cho${ENV}-data-lake
+            path: pg_changelogs/kafka/order-service/order_service.public.users
         outputs:
           - type: databricks
-            catalog: ${ENV_MARTS}
-            schema: dlt_users
-            table: silver_order_preference
+            catalog: changelogs
+            schema: order_service_public
+            table: pg_users
+          - type: databricks
+            catalog: core
+            schema: order_service
+            table: pg_users
         task_parameters:
-          job_name: dlt-users
+          job_name: "[JOB] order-service-pipeline"
           databricks_conn_id: databricks_default
           wait_for_completion: true
           poll_interval_seconds: 30
           timeout_seconds: 3600
     """
 
-    ref_name: str = "databricks_dlt"
+    ref_name: str = "declarative_pipeline"
 
     @classmethod
     def init_attributes(cls, orig_cls: type) -> None:
@@ -106,7 +110,7 @@ class DatabricksDLTTask(Task):
         pipeline: Any,
         job_config: dict[str, Any],
     ) -> None:
-        """Initialize a DatabricksDLTTask instance.
+        """Initialize a DeclarativePipelineTask instance.
 
         Args:
             name: The task name (used as task_id in Airflow).

@@ -1,18 +1,18 @@
-"""Unit tests for DatabricksDLTCreator."""
+"""Unit tests for DeclarativePipelineCreator."""
 
 import sys
 import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from dagger.dag_creator.airflow.operator_creators.databricks_dlt_creator import (
-    DatabricksDLTCreator,
+from dagger.dag_creator.airflow.operator_creators.declarative_pipeline_creator import (
+    DeclarativePipelineCreator,
     _cancel_databricks_run,
 )
 
 
-class TestDatabricksDLTCreator(unittest.TestCase):
-    """Test cases for DatabricksDLTCreator."""
+class TestDeclarativePipelineCreator(unittest.TestCase):
+    """Test cases for DeclarativePipelineCreator."""
 
     def setUp(self) -> None:
         """Set up test fixtures."""
@@ -35,7 +35,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
 
     def test_ref_name(self) -> None:
         """Test that ref_name is correctly set."""
-        self.assertEqual(DatabricksDLTCreator.ref_name, "databricks_dlt")
+        self.assertEqual(DeclarativePipelineCreator.ref_name, "declarative_pipeline")
 
     @patch.dict(
         sys.modules,
@@ -49,7 +49,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
             "airflow.providers.databricks.operators.databricks"
         ].DatabricksRunNowOperator = mock_operator_class
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
         operator = creator._create_operator()
 
         mock_operator_class.assert_called_once()
@@ -66,7 +66,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
             "airflow.providers.databricks.operators.databricks"
         ].DatabricksRunNowOperator = mock_operator_class
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
         creator._create_operator()
 
         call_kwargs = mock_operator_class.call_args[1]
@@ -97,7 +97,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
             "airflow.providers.databricks.operators.databricks"
         ].DatabricksRunNowOperator = mock_operator_class
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
         creator._create_operator()
 
         call_kwargs = mock_operator_class.call_args[1]
@@ -115,7 +115,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
         """Test that empty job_name raises ValueError."""
         self.mock_task.job_name = ""
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
 
         with self.assertRaises(ValueError) as context:
             creator._create_operator()
@@ -131,7 +131,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
         """Test that None job_name raises ValueError."""
         self.mock_task.job_name = None
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
 
         with self.assertRaises(ValueError) as context:
             creator._create_operator()
@@ -149,7 +149,7 @@ class TestDatabricksDLTCreator(unittest.TestCase):
             "airflow.providers.databricks.operators.databricks"
         ].DatabricksRunNowOperator = mock_operator_class
 
-        creator = DatabricksDLTCreator(self.mock_task, self.mock_dag)
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
         creator._create_operator(retries=3, retry_delay=60)
 
         call_kwargs = mock_operator_class.call_args[1]
