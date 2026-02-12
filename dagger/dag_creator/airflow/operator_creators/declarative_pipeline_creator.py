@@ -1,7 +1,7 @@
 """Operator creator for declarative pipelines (DLT/Delta Live Tables)."""
 
 import logging
-from typing import Any
+from typing import Any, Callable, Optional
 
 from airflow.models import BaseOperator, DAG
 
@@ -49,6 +49,33 @@ def _cancel_databricks_run(context: dict[str, Any]) -> None:
         )
     except Exception as e:
         _logger.error(f"Failed to cancel Databricks run {run_id}: {e}")
+
+
+def _build_failure_callback(
+    dag_callback: Optional[Callable[[dict[str, Any]], None]],
+) -> Callable[[dict[str, Any]], None]:
+    """Build a failure callback that cancels the Databricks run and invokes the DAG-level callback.
+
+    When a DAG defines an ``on_failure_callback`` in its ``default_args`` (e.g. for
+    Slack alerts), that callback is normally overridden by operator-level callbacks.
+    This helper produces a single callback that always cancels the Databricks run
+    **and** forwards to the DAG-level callback so that alerts still fire.
+
+    Args:
+        dag_callback: The DAG-level ``on_failure_callback`` (from ``default_args``),
+            or ``None`` if the DAG has no failure callback configured.
+
+    Returns:
+        A callback suitable for ``on_failure_callback`` on the operator.
+    """
+    if dag_callback is None:
+        return _cancel_databricks_run
+
+    def _composite_failure_callback(context: dict[str, Any]) -> None:
+        _cancel_databricks_run(context)
+        dag_callback(context)
+
+    return _composite_failure_callback
 
 
 class DeclarativePipelineCreator(OperatorCreator):
@@ -108,6 +135,12 @@ class DeclarativePipelineCreator(OperatorCreator):
         poll_interval_seconds: int = self._task.poll_interval_seconds
         timeout_seconds: int = self._task.timeout_seconds
 
+        # Build the on_failure_callback: always cancel the Databricks run,
+        # and also invoke the DAG-level callback (e.g. Slack alerts) if one exists.
+        on_failure: Callable[[dict[str, Any]], None] = _build_failure_callback(
+            self._dag.default_args.get("on_failure_callback"),
+        )
+
         # DatabricksRunNowOperator triggers an existing Databricks Job by name
         # The job must have a pipeline_task that references the DLT pipeline
         # Note: timeout is handled via Airflow's execution_timeout, not a direct parameter
@@ -122,7 +155,7 @@ class DeclarativePipelineCreator(OperatorCreator):
             polling_period_seconds=poll_interval_seconds,
             execution_timeout=timedelta(seconds=timeout_seconds),
             do_xcom_push=True,  # Required to store run_id for cancellation callback
-            on_failure_callback=_cancel_databricks_run,
+            on_failure_callback=on_failure,
             **kwargs,
         )
 
