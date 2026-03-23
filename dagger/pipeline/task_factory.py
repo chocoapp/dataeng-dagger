@@ -3,14 +3,17 @@ from dagger.pipeline.tasks import (
     airflow_op_task,
     athena_transform_task,
     batch_task,
+    declarative_pipeline_task,
     dbt_task,
     dummy_task,
     python_task,
     redshift_load_task,
     redshift_transform_task,
     redshift_unload_task,
+    reverse_etl_task,
     spark_task,
     sqoop_task,
+    soda_task,
 )
 from dagger.utilities.classes import get_deep_obj_subclasses
 

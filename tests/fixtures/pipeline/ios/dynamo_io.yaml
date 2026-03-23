@@ -1,0 +1,11 @@
+type: dynamo
+name: dynamo_table
+table: schema.table_name                        # The name of the dynamo table
+region_name: eu_west_1
+
+
+# Other attributes:
+
+# has_dependency:                # Weather this i/o should be added to the dependency graph or not. Default is True
+# follow_external_dependency:    # format: dictionary or boolean | External Task Sensor parameters in key value format: https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/sensors/base/index.html
+# region_name:                   # Only needed for cross region dynamo tables

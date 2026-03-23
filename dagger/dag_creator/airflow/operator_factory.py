@@ -4,14 +4,17 @@ from dagger.dag_creator.airflow.operator_creators import (
     airflow_op_creator,
     athena_transform_creator,
     batch_creator,
+    declarative_pipeline_creator,
     dbt_creator,
     dummy_creator,
     python_creator,
     redshift_load_creator,
     redshift_transform_creator,
     redshift_unload_creator,
+    reverse_etl_creator,
     spark_creator,
     sqoop_creator,
+    soda_creator,
 )
 from dagger.dag_creator.airflow.utils.operator_factories import make_control_flow
 from dagger.utilities.classes import get_deep_obj_subclasses

@@ -6,7 +6,10 @@ from dagger.pipeline.ios import (
     dummy_io,
     gdrive_io,
     redshift_io,
-    s3_io
+    s3_io,
+    databricks_io,
+    dynamo_io,
+    sns_io,
 )
 from dagger.utilities.classes import get_deep_obj_subclasses
 

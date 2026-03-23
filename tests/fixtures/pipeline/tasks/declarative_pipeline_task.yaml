@@ -1,0 +1,22 @@
+type: declarative_pipeline
+description: Test DLT pipeline task
+inputs:
+  - type: athena
+    name: input_table
+    schema: test_schema
+    table: input_table
+outputs:
+  - type: databricks
+    name: output_table
+    catalog: test_catalog
+    schema: test_schema
+    table: output_table
+airflow_task_parameters:
+template_parameters:
+task_parameters:
+  job_name: test-dlt-job
+  databricks_conn_id: databricks_test
+  wait_for_completion: true
+  poll_interval_seconds: 60
+  timeout_seconds: 7200
+  cancel_on_kill: true

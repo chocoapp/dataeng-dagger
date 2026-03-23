@@ -91,6 +91,7 @@ class SparkCreator(OperatorCreator):
                 job_args=_parse_args(self._template_parameters),
                 spark_args=_parse_spark_args(self._task.spark_args),
                 spark_conf_args=_parse_spark_args(self._task.spark_conf_args, '=', 'conf '),
+                spark_app_name=self._task.spark_conf_args.get("spark.app.name", None) if self._task.spark_conf_args else None,
                 extra_py_files=self._task.extra_py_files,
                 **kwargs,
             )
@@ -113,7 +114,7 @@ class SparkCreator(OperatorCreator):
                 job_name=job_name,
                 region_name=self._task.region_name,
                 job_queue=self._task.job_queue,
-                overrides=overrides,
+                container_overrides=overrides,
                 **kwargs,
             )
         elif self._task.spark_engine == "glue":

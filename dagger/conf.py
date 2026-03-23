@@ -21,9 +21,7 @@ ENV_SUFFIX = "dev" if ENV == "local" else ""
 # Airflow parameters
 airflow_config = config.get('airflow', None) or {}
 WITH_DATA_NODES = airflow_config.get('with_data_nodes', False)
-EXTERNAL_SENSOR_POKE_INTERVAL = airflow_config.get('external_sensor_poke_interval', 600)
-EXTERNAL_SENSOR_TIMEOUT = airflow_config.get('external_sensor_timeout', 28800)
-EXTERNAL_SENSOR_MODE = airflow_config.get('external_sensor_mode', 'reschedule')
+EXTERNAL_SENSOR_DEFAULT_ARGS = airflow_config.get('external_sensor_default_args', {})
 IS_DUMMY_OPERATOR_SHORT_CIRCUIT = airflow_config.get('is_dummy_operator_short_circuit', False)
 
 # Neo4j parameters
@@ -101,3 +99,22 @@ SQOOP_DEFAULT_PROPERTIES = sqoop_config.get('default_properties', {"mapreduce.jo
 alert_config = config.get('alert', None) or {}
 SLACK_TOKEN = alert_config.get('slack_token', None)
 DEFAULT_ALERT = alert_config.get('default_alert', {"type": "slack", "channel": "#airflow-jobs", "mentions": None})
+
+# Plugin parameters
+plugin_config = config.get('plugin', None) or {}
+PLUGIN_DIRS = [os.path.join(AIRFLOW_HOME, path) for path in plugin_config.get('paths', [])]
+logging.info(f"All Python classes will be loaded as plugins from the following directories: {PLUGIN_DIRS}")
+
+# ReverseETL parameters
+reverse_etl_config = config.get('reverse_etl', None) or {}
+REVERSE_ETL_DEFAULT_JOB_NAME = reverse_etl_config.get('default_job_name', None)
+REVERSE_ETL_DEFAULT_EXECUTABLE_PREFIX = reverse_etl_config.get('default_executable_prefix', None)
+REVERSE_ETL_DEFAULT_EXECUTABLE = reverse_etl_config.get('default_executable', None)
+
+# Soda parameters
+soda_config = config.get('soda', None) or {}
+SODA_DEFAULT_JOB_NAME = soda_config.get('default_job_name', None)
+SODA_DEFAULT_EXECUTABLE_PREFIX = soda_config.get('default_executable_prefix', None)
+SODA_DEFAULT_EXECUTABLE = soda_config.get('default_executable', None)
+SODA_DEFAULT_OUTPUT_TABLE = soda_config.get('default_output_table', None)
+SODA_DEFAULT_OUTPUT_S3_PATH = soda_config.get('default_output_s3_path', None)

@@ -87,6 +87,41 @@ flowchart TD;
    
 ```
 
+Plugins for dagger
+-------
+
+### Overview
+Dagger now supports a plugin system that allows users to extend its functionality by adding custom Python classes. These plugins are integrated into the Jinja2 templating engine, enabling dynamic rendering of task configuration templates.
+### Purpose
+The plugin system allows users to define Python classes that can be loaded into the Jinja2 environment. When functions from these classes are invoked within a task configuration template, they are rendered dynamically using Jinja2. This feature enhances the flexibility of task configurations by allowing custom logic to be embedded directly in the templates.
+
+### Usage
+1. **Creating a Plugin:** To create a new plugin, define a Python class in a folder(for example `plugins/sample_plugin/sample_plugin.py`) with the desired methods. For example:
+```python
+class MyCustomPlugin:
+    def generate_input(self, branch_name):
+        return [{"name": f"{branch_name}", "type": "dummy"}]
+```
+This class defines a `generate_input` method that takes the branch_name from the module config and returns a dummy dagger task.
+
+2. **Loading the Plugin into Dagger:** To load this plugin into Dagger's Jinja2 environment, you need to register it in your `dagger_config.yaml`:
+```yaml
+# pipeline.yaml
+plugin:
+  paths: 
+    - plugins # all Python classes within this path will be loaded into the Jinja environment
+```
+
+3. **Using Plugin Methods in Templates:** Once the plugin is loaded, you can call its methods from within any Jinja2 template in your task configurations:
+```yaml
+# task_configuration.yaml
+type: batch
+description: sample task
+inputs:                        # format: list | Use dagger init-io cli
+  {{ MyCustomPlugin.generate_input("dummy_input") }}
+```
+
+
 
 Credits
 -------

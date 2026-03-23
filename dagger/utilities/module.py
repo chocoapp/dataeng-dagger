@@ -1,14 +1,21 @@
+import importlib
+import inspect
 import logging
-from os import path
-from mergedeep import merge
+import os
+import pkgutil
+from os import path, environ
 
+import jinja2
 import yaml
+
+from dagger import conf
+from mergedeep import merge
 
 _logger = logging.getLogger("root")
 
 
 class Module:
-    def __init__(self, path_to_config, target_dir):
+    def __init__(self, path_to_config, target_dir, jinja_parameters=None):
         self._directory = path.dirname(path_to_config)
         self._target_dir = target_dir or "./"
         self._path_to_config = path_to_config
@@ -16,11 +23,14 @@ class Module:
 
         self._tasks = {}
         for task in config["tasks"]:
-            self._tasks[task] = self.read_task_config(f"{path.join(self._directory, task)}.yaml")
+            self._tasks[task] = self.read_task_config(
+                f"{path.join(self._directory, task)}.yaml"
+            )
 
         self._branches_to_generate = config["branches_to_generate"]
         self._override_parameters = config.get("override_parameters", {})
         self._default_parameters = config.get("default_parameters", {})
+        self._jinja_parameters = jinja_parameters or {}
 
     @staticmethod
     def read_yaml(yaml_str):
@@ -41,22 +51,50 @@ class Module:
         return content
 
     @staticmethod
+    def load_plugins_to_jinja_environment(
+        environment: jinja2.Environment,
+    ) -> jinja2.Environment:
+        """
+        Dynamically load all classes(plugins) from the folders defined in the conf.PLUGIN_DIRS variable.
+        The folder contains all plugins that are part of the project.
+        Returns:
+            dict: A dictionary with the class name as key and the class object as value
+        """
+        for plugin_path in conf.PLUGIN_DIRS:
+            for root, dirs, files in os.walk(plugin_path):
+                dirs[:] = [
+                    directory
+                    for directory in dirs
+                    if not directory.lower().startswith("test")
+                ]
+                for plugin_file in files:
+                    if plugin_file.endswith(".py") and not (
+                        plugin_file.startswith("__") or plugin_file.startswith("test")
+                    ):
+                        module_name = plugin_file.replace(".py", "")
+                        module_path = os.path.join(root, plugin_file)
+                        spec = importlib.util.spec_from_file_location(
+                            module_name, module_path
+                        )
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+
+                        for name, obj in inspect.getmembers(module, inspect.isclass):
+                            environment.globals[f"{name}"] = obj
+
+        return environment
+
+    @staticmethod
     def replace_template_parameters(_task_str, _template_parameters):
-        for _key, _value in _template_parameters.items():
-            if type(_value) == str:
-                try:
-                    int_value = int(_value)
-                    _value = f"\"{_value}\""
-                except:
-                    pass
-            locals()[_key] = _value
+        environment = jinja2.Environment()
+        environment = Module.load_plugins_to_jinja_environment(environment)
+        template = environment.from_string(_task_str)
+        rendered_task = template.render(_template_parameters)
 
         return (
-            _task_str.format(**locals())
-            .replace("{", "{{")
-            .replace("}", "}}")
-            .replace("__CBS__", "{")
-            .replace("__CBE__", "}")
+            rendered_task
+            # TODO Remove this hack and use Jinja escaping instead of special expression in template files
+            .replace("__CBS__", "{").replace("__CBE__", "}")
         )
 
     @staticmethod
@@ -73,6 +111,8 @@ class Module:
             template_parameters = {}
             template_parameters.update(self._default_parameters or {})
             template_parameters.update(attrs)
+            template_parameters["branch_name"] = branch_name
+            template_parameters.update(self._jinja_parameters)
 
             for task, task_yaml in self._tasks.items():
                 task_name = f"{branch_name}_{task}"
@@ -86,7 +126,9 @@ class Module:
                 override_parameters = self._override_parameters or {}
                 merge(task_dict, override_parameters.get(branch_name, {}).get(task, {}))
 
-                self.dump_yaml(task_dict, f"{path.join(self._target_dir, task_name)}.yaml")
+                self.dump_yaml(
+                    task_dict, f"{path.join(self._target_dir, task_name)}.yaml"
+                )
 
     @staticmethod
     def module_config_template():

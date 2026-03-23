@@ -45,8 +45,7 @@ setup(
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.12",
     ],
     description="Config Driven ETL",
     entry_points={"console_scripts": ["dagger=dagger.main:cli"]},
@@ -60,6 +59,6 @@ setup(
     packages=find_packages(),
     tests_require=test_requires,
     url="https://gitlab.com/goflash1/data/dagger",
-    version="0.9.0",
+    version="0.9.1",
     zip_safe=False,
 )

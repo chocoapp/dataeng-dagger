@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from os.path import join, relpath
 
 from dagger import conf
@@ -71,6 +71,7 @@ class Pipeline(ConfigValidator):
         self._alerts = []
         self._alert_factory = AlertFactory()
         self.process_alerts(config["alerts"] or [])
+        self.process_dag_parameters(self._parameters)
 
     @property
     def directory(self):
@@ -129,3 +130,8 @@ class Pipeline(ConfigValidator):
                         alert_type, join(self.directory, "pipeline.yaml"), alert_config
                     )
                 )
+    def process_dag_parameters(self, dag_parameters):#TODO: create long term fix for this
+        if dag_parameters is not None:
+            for key, value in dag_parameters.items():
+                if key == 'dagrun_timeout':
+                    self._parameters[key] = eval(value)

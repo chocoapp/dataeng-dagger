@@ -2,9 +2,8 @@ from os.path import join
 from typing import Optional
 
 from dagger.dag_creator.airflow.operator_creator import OperatorCreator
-from dagger.dag_creator.airflow.operators.redshift_sql_operator import (
-    RedshiftSQLOperator,
-)
+from dagger.dag_creator.airflow.operators.redshift_sql_operator import RedshiftSQLOperator
+
 
 
 class RedshiftLoadCreator(OperatorCreator):

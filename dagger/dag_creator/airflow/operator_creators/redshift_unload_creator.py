@@ -1,7 +1,7 @@
 from os.path import join
 
 from dagger.dag_creator.airflow.operator_creator import OperatorCreator
-from dagger.dag_creator.airflow.operators.postgres_operator import PostgresOperator
+from dagger.dag_creator.airflow.operators.redshift_sql_operator import RedshiftSQLOperator
 
 REDSHIFT_UNLOAD_CMD = """
 unload ('{sql_string}')
@@ -58,12 +58,13 @@ class RedshiftUnloadCreator(OperatorCreator):
 
         unload_cmd = self._get_unload_command(sql_string)
 
-        redshift_op = PostgresOperator(
+        redshift_op = RedshiftSQLOperator(
             dag=self._dag,
             task_id=self._task.name,
             sql=unload_cmd,
-            postgres_conn_id=self._task.postgres_conn_id,
+            redshift_conn_id=self._task.postgres_conn_id,
             params=self._template_parameters,
+            autocommit=True,
             **kwargs,
         )
 
