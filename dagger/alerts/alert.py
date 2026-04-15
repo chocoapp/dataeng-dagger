@@ -114,7 +114,7 @@ def airflow_task_fail_alerts(alerts: List[AlertBase], context):
         alert.execute(
             task_instance.dag_id,
             task_instance.task_id,
-            context["execution_date"],
+            context.get("logical_date", context.get("execution_date")),
             run_time,
             task_instance.log_url,
         )

@@ -35,8 +35,8 @@ class DagCreator(GraphTraverserBase):
 
     @staticmethod
     def _get_execution_date_fn(from_dag_schedule: str, to_dag_schedule: str):
-        def execution_date_fn(execution_date, **kwargs):
-            to_dag_cron = croniter.croniter(to_dag_schedule, execution_date)
+        def execution_date_fn(logical_date, **kwargs):
+            to_dag_cron = croniter.croniter(to_dag_schedule, logical_date)
             to_dag_next_schedule = to_dag_cron.get_next(datetime)
 
             from_dag_cron = croniter.croniter(from_dag_schedule, to_dag_next_schedule)
