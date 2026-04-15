@@ -104,7 +104,7 @@ class DagCreator(GraphTraverserBase):
             description=pipeline.description,
             default_args=default_args,
             start_date=pipeline.start_date,
-            schedule_interval=pipeline.schedule,
+            schedule=pipeline.schedule,
             user_defined_macros=user_defined_macros,
             **pipeline.parameters,
         )
