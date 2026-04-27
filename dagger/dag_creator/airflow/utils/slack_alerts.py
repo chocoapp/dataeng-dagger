@@ -1,7 +1,7 @@
 import os
 
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
-from airflow.hooks.base_hook import BaseHook
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
+from airflow.hooks.base import BaseHook
 
 SLACK_CONN_ID = "slack"
 ENV = os.environ["ENV"].lower()
@@ -38,7 +38,7 @@ def task_success_slack_alert(context):
         task=context["task_instance"].task_id,
         dag=context["task_instance"].dag_id,
         ti=context["task_instance"],
-        exec_date=context["execution_date"],
+        exec_date=context.get("logical_date", context.get("execution_date")),
         run_time=get_task_run_time(context["task_instance"]),
         log_url=context["task_instance"].log_url,
     )
@@ -81,7 +81,7 @@ def task_fail_slack_alert(context):
         task=context["task_instance"].task_id,
         dag=context["task_instance"].dag_id,
         ti=context["task_instance"],
-        exec_date=context["execution_date"],
+        exec_date=context.get("logical_date", context.get("execution_date")),
         run_time=get_task_run_time(context["task_instance"]),
         log_url=context["task_instance"].log_url,
     )
