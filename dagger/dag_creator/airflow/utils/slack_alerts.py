@@ -1,7 +1,7 @@
 import os
 
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-from airflow.hooks.base import BaseHook
+from airflow.utils.types import DagRunType
 
 SLACK_CONN_ID = "slack"
 ENV = os.environ["ENV"].lower()
@@ -9,6 +9,16 @@ ENV = os.environ["ENV"].lower()
 
 def get_task_run_time(task_instance):
     return (task_instance.end_date - task_instance.start_date).total_seconds()
+
+
+def _should_skip_alert(context):
+    if ENV == "datatst":
+        return True
+    if context["dag_run"].run_type == DagRunType.MANUAL:
+        return True
+    if getattr(context["dag"], "is_paused", False):
+        return True
+    return False
 
 
 def task_success_slack_alert(context):
@@ -19,14 +29,9 @@ def task_success_slack_alert(context):
     Returns:
         None: Calls the SlackWebhookOperator execute method internally
     """
-    if ENV == "datatst":
-        return
-    if context["dag_run"].external_trigger is True:
-        return
-    if context["dag"].is_paused is True:
+    if _should_skip_alert(context):
         return
 
-    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).password
     slack_msg = """
             :large_blue_circle: Task Succeeded!
             *Task*: {task}
@@ -45,8 +50,7 @@ def task_success_slack_alert(context):
 
     success_alert = SlackWebhookOperator(
         task_id="slack_test",
-        http_conn_id="slack",
-        webhook_token=slack_webhook_token,
+        slack_webhook_conn_id=SLACK_CONN_ID,
         message=slack_msg,
         username="airflow",
     )
@@ -62,14 +66,9 @@ def task_fail_slack_alert(context):
     Returns:
         None: Calls the SlackWebhookOperator execute method internally
     """
-    if ENV == "datatst":
-        return
-    if context["dag_run"].external_trigger is True:
-        return
-    if context["dag"].is_paused is True:
+    if _should_skip_alert(context):
         return
 
-    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).password
     slack_msg = """
             :red_circle: Task Failed.
             *Task*: {task}
@@ -88,8 +87,7 @@ def task_fail_slack_alert(context):
 
     failed_alert = SlackWebhookOperator(
         task_id=context["task_instance"].task_id,
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=slack_webhook_token,
+        slack_webhook_conn_id=SLACK_CONN_ID,
         message=slack_msg,
         username="airflow",
     )

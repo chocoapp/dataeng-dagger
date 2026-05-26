@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
+from airflow.utils.types import DagRunType
 from slack.web.client import WebClient
 from dagger import conf
 from dagger.utilities.config_validator import Attribute, ConfigValidator
@@ -98,9 +99,9 @@ def get_task_run_time(task_instance):
 def airflow_task_fail_alerts(alerts: List[AlertBase], context):
     if conf.ENV == "datatst":
         return
-    if context["dag_run"].external_trigger is True:
+    if context["dag_run"].run_type == DagRunType.MANUAL:
         return
-    if context["dag"].is_paused is True:
+    if getattr(context["dag"], "is_paused", False):
         return
 
     task_instance = context["task_instance"]
