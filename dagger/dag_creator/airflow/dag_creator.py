@@ -35,17 +35,23 @@ class DagCreator(GraphTraverserBase):
 
     @staticmethod
     def _get_execution_date_fn(from_dag_schedule: str, to_dag_schedule: str):
+        # Airflow 3 schedules cron DAGs with CronTriggerTimetable, where a run's
+        # logical_date IS its cron tick (data_interval_start == data_interval_end ==
+        # logical_date) and the run executes at that tick. So the upstream run a
+        # downstream run depends on is the most recent upstream tick at or before this
+        # run's logical_date, and that tick is exactly the upstream run's logical_date.
+        #
+        # Pre-Airflow-3 this walked back an extra interval (CronDataIntervalTimetable
+        # semantics, where logical_date was the data-interval start), which under
+        # Airflow 3 points at a logical_date no run has -> the ExternalTaskSensor /
+        # WorkflowTrigger never matches and hangs forever.
+        #
+        # `to_dag_schedule` is no longer needed: logical_date already equals the
+        # downstream run's tick.
         def execution_date_fn(logical_date, **kwargs):
-            to_dag_cron = croniter.croniter(to_dag_schedule, logical_date)
-            to_dag_next_schedule = to_dag_cron.get_next(datetime)
-
-            from_dag_cron = croniter.croniter(from_dag_schedule, to_dag_next_schedule)
-            from_dag_cron.get_next(datetime)
-            # skipping one schedule
-            from_dag_cron.get_prev(datetime)
-            from_dag_target_schedule = from_dag_cron.get_prev(datetime)
-
-            return from_dag_target_schedule
+            if croniter.croniter.match(from_dag_schedule, logical_date):
+                return logical_date
+            return croniter.croniter(from_dag_schedule, logical_date).get_prev(datetime)
 
         return execution_date_fn
 

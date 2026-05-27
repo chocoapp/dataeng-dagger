@@ -80,12 +80,15 @@ class TestDagCreator(unittest.TestCase):
         execution_date = datetime(2021, 12, 28, 18, 30)
         test_cases = [
             # (from_dag_schedule, to_dag_schedule, expected_result)
+            # Airflow 3 CronTriggerTimetable: the target is the most recent upstream
+            # tick at or before the downstream run's logical_date (= the upstream run's
+            # own logical_date).
             ("0 * * * *", "30 * * * *", datetime(2021, 12, 28, 18, 0)),  # both hourly with different minutes
             ("30 * * * *", "30 * * * *", datetime(2021, 12, 28, 18, 30)),  # both hourly with same minutes
-            ("0 * * * *", "30 18 * * *", datetime(2021, 12, 29, 17, 0)),  # from hourly to daily with different minutes
-            ("30 * * * *", "30 18 * * *", datetime(2021, 12, 29, 17, 30)),  # from hourly to daily with same minutes
+            ("0 * * * *", "30 18 * * *", datetime(2021, 12, 28, 18, 0)),  # from hourly to daily with different minutes
+            ("30 * * * *", "30 18 * * *", datetime(2021, 12, 28, 18, 30)),  # from hourly to daily with same minutes
             ("0 19 * * *", "30 * * * *", datetime(2021, 12, 27, 19, 0)),  # from daily to hourly with different minutes
-            ("0 20 * * *", "30 * * * *", datetime(2021, 12, 26, 20, 0)),  # from daily to hourly with different minutes
+            ("0 20 * * *", "30 * * * *", datetime(2021, 12, 27, 20, 0)),  # from daily to hourly with different minutes
             ("30 19 * * *", "30 * * * *", datetime(2021, 12, 27, 19, 30)),  # from daily to hourly with same minutes
         ]
 
@@ -94,6 +97,17 @@ class TestDagCreator(unittest.TestCase):
 
             execution_delta_fn = DagCreator._get_execution_date_fn(from_dag_schedule, to_dag_schedule)
             self.assertEqual(execution_delta_fn(execution_date), expected_result)
+
+    def test_get_execution_delta_fn_daily_waiting_on_hourly_airflow3(self):
+        # Regression for the Airflow 3 logical_date bug: a daily DAG (00:45) waiting on
+        # an hourly upstream must target the hourly run whose logical_date is the most
+        # recent tick at or before the daily run's logical_date. Pre-fix this resolved to
+        # a future/nonexistent hourly tick, so the deferred sensor polled forever.
+        execution_delta_fn = DagCreator._get_execution_date_fn("0 * * * *", "45 0 * * *")
+        self.assertEqual(
+            execution_delta_fn(datetime(2026, 5, 27, 0, 45)),
+            datetime(2026, 5, 27, 0, 0),
+        )
 
     def test_disable_task(self):
         dag_creator = DagCreator(self.task_graph._graph, with_data_nodes=True)
