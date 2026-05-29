@@ -57,6 +57,10 @@ class TestDeclarativePipelineTask(unittest.TestCase):
         """Test cancel_on_kill property."""
         self.assertTrue(self.task.cancel_on_kill)
 
+    def test_deferrable(self) -> None:
+        """Test deferrable property."""
+        self.assertTrue(self.task.deferrable)
+
     def test_task_name(self) -> None:
         """Test that task name is correctly set."""
         self.assertEqual(self.task.name, "test_dlt_task")
@@ -112,6 +116,10 @@ class TestDeclarativePipelineTaskDefaults(unittest.TestCase):
     def test_default_cancel_on_kill(self) -> None:
         """Test default cancel_on_kill value."""
         self.assertTrue(self.task.cancel_on_kill)
+
+    def test_default_deferrable(self) -> None:
+        """Test default deferrable value."""
+        self.assertFalse(self.task.deferrable)
 
 
 class TestDeclarativePipelineTaskBooleanHandling(unittest.TestCase):

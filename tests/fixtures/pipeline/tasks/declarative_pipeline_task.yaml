@@ -20,3 +20,4 @@ task_parameters:
   poll_interval_seconds: 60
   timeout_seconds: 7200
   cancel_on_kill: true
+  deferrable: true

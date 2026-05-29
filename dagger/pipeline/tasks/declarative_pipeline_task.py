@@ -21,6 +21,7 @@ class DeclarativePipelineTask(Task):
         poll_interval_seconds: Polling interval in seconds.
         timeout_seconds: Timeout in seconds.
         cancel_on_kill: Whether to cancel Databricks job if Airflow task is killed.
+        deferrable: Whether the operator defers to the triggerer while waiting.
 
     Example YAML configuration:
         type: declarative_pipeline
@@ -45,6 +46,7 @@ class DeclarativePipelineTask(Task):
           wait_for_completion: true
           poll_interval_seconds: 30
           timeout_seconds: 3600
+          deferrable: true
     """
 
     ref_name: str = "declarative_pipeline"
@@ -100,6 +102,13 @@ class DeclarativePipelineTask(Task):
                     validator=bool,
                     comment="Cancel Databricks job if Airflow task is killed (default: true)",
                 ),
+                Attribute(
+                    attribute_name="deferrable",
+                    parent_fields=["task_parameters"],
+                    required=False,
+                    validator=bool,
+                    comment="Defer to the triggerer while waiting for the run (default: false)",
+                ),
             ]
         )
 
@@ -136,6 +145,7 @@ class DeclarativePipelineTask(Task):
         self._cancel_on_kill: bool = (
             cancel_on_kill if cancel_on_kill is not None else True
         )
+        self._deferrable: bool = self.parse_attribute("deferrable") or False
 
     @property
     def job_name(self) -> str:
@@ -166,3 +176,8 @@ class DeclarativePipelineTask(Task):
     def cancel_on_kill(self) -> bool:
         """Whether to cancel Databricks job if Airflow task is killed."""
         return self._cancel_on_kill
+
+    @property
+    def deferrable(self) -> bool:
+        """Whether the operator defers to the triggerer while waiting for the run."""
+        return self._deferrable

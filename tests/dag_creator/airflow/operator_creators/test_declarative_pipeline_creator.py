@@ -25,6 +25,7 @@ class TestDeclarativePipelineCreator(unittest.TestCase):
         self.mock_task.poll_interval_seconds = 30
         self.mock_task.timeout_seconds = 3600
         self.mock_task.cancel_on_kill = True
+        self.mock_task.deferrable = False
 
         self.mock_dag = MagicMock()
         self.mock_dag.default_args = {}
@@ -80,6 +81,7 @@ class TestDeclarativePipelineCreator(unittest.TestCase):
         self.assertEqual(call_kwargs["wait_for_termination"], True)
         self.assertEqual(call_kwargs["polling_period_seconds"], 30)
         self.assertEqual(call_kwargs["execution_timeout"], timedelta(seconds=3600))
+        self.assertEqual(call_kwargs["deferrable"], False)
         self.assertTrue(call_kwargs["do_xcom_push"])
         # No DAG-level on_failure_callback, so only _cancel_databricks_run is used
         self.assertEqual(call_kwargs["on_failure_callback"], _cancel_databricks_run)
@@ -133,6 +135,26 @@ class TestDeclarativePipelineCreator(unittest.TestCase):
         self.assertEqual(call_kwargs["wait_for_termination"], False)
         self.assertEqual(call_kwargs["polling_period_seconds"], 60)
         self.assertEqual(call_kwargs["execution_timeout"], timedelta(seconds=7200))
+
+    @patch.dict(
+        sys.modules,
+        {"airflow.providers.databricks.operators.databricks": MagicMock()},
+    )
+    def test_create_operator_forwards_deferrable(self) -> None:
+        """Test that deferrable=True is forwarded to the operator."""
+        self.mock_task.deferrable = True
+
+        mock_operator_class = MagicMock()
+        sys.modules[
+            "airflow.providers.databricks.operators.databricks"
+        ].DatabricksRunNowOperator = mock_operator_class
+
+        creator = DeclarativePipelineCreator(self.mock_task, self.mock_dag)
+        creator._create_operator()
+
+        call_kwargs = mock_operator_class.call_args[1]
+
+        self.assertEqual(call_kwargs["deferrable"], True)
 
     @patch.dict(
         sys.modules,

@@ -134,6 +134,7 @@ class DeclarativePipelineCreator(OperatorCreator):
         wait_for_completion: bool = self._task.wait_for_completion
         poll_interval_seconds: int = self._task.poll_interval_seconds
         timeout_seconds: int = self._task.timeout_seconds
+        deferrable: bool = self._task.deferrable
 
         # Build the on_failure_callback: always cancel the Databricks run,
         # and also invoke the DAG-level callback (e.g. Slack alerts) if one exists.
@@ -146,6 +147,8 @@ class DeclarativePipelineCreator(OperatorCreator):
         # Note: timeout is handled via Airflow's execution_timeout, not a direct parameter
         # Note: on_kill() is already implemented in DatabricksRunNowOperator to cancel runs
         # We add on_failure_callback to also cancel when task is marked as failed
+        # Note: when deferrable=True the operator only defers if wait_for_termination=True;
+        # it pushes run_id to XCom before deferring, so the cancellation callback still works
         operator: BaseOperator = DatabricksRunNowOperator(
             dag=self._dag,
             task_id=self._task.name,
@@ -154,6 +157,7 @@ class DeclarativePipelineCreator(OperatorCreator):
             wait_for_termination=wait_for_completion,
             polling_period_seconds=poll_interval_seconds,
             execution_timeout=timedelta(seconds=timeout_seconds),
+            deferrable=deferrable,
             do_xcom_push=True,  # Required to store run_id for cancellation callback
             on_failure_callback=on_failure,
             **kwargs,
